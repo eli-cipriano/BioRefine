@@ -1,0 +1,14 @@
+side material,substrate,treatment,conversion,source
+cellulose,glucose,enzymatic,0.8,s1
+cellulose,glucose,enzymatic,0.4,s2
+cellulose,glucose,thermoshock,0.6,s3
+cellulose,glucose,acid schock,0.8,s4
+cellulose,glucose,thermoenzymatic,0.6,s5
+cellulose,glucose,mechanical,0.7,s6
+cellulose,glucose,mechanical,0.7,s7
+germ,oil,cold press,0.3,s8
+germ,oil,expeller press,0.5,s9
+germ,oil,solvent extraction,0.7,s10
+germ,oil,cold press,0.6,s11
+germ,oil,expeller press,0.8,s12
+germ,oil,solvent extraction,0.9,s13

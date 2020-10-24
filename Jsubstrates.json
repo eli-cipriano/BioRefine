@@ -1,0 +1,1 @@
+{"glucose": {"materials": ["corn", "sugarcane"], "processes": ["anaerobic_yeast", "anaerobic_ecoli", "thermochemical"], "name": "glucose"}, "oil": {"materials": ["poplar", "oil"], "processes": ["thermochemical"], "name": "oil"}}

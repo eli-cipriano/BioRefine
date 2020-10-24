@@ -1,0 +1,4 @@
+material,substrate,side1,side2,comp,comp source,yield (kg/m2),yield source
+corn,glucose,cellulose,germ,0.3/0.6/0.1,cs1,2,ys1
+sugar cane,glucose,cellulose,none,0.3/0.7/0,cs2,5,ys1
+poplar,oil,cellulose,none,0.2/0.8/0,cs3,10,ys3
