@@ -86,87 +86,121 @@ def build_products():
 
 def build_processes():
     processes = {}
-    subprods = build_subprods('anaerobic_yeast')
-    anaerobic_yeast = {'subprods': subprods,
-                       'products': ['ethanol', 'ABE'],
-                       'substrates': ['glucose'],
-                       'skills': 'ferment resistent',
-                       'name': 'anaerobic_yeast'
-                       }
-    subprods = build_subprods('anaerobic_ecoli')
-    anaerobic_ecoli = {'subprods': subprods,
-                       'products': ['fatty acids', 'pha'],
-                       'substrates': ['glucose', 'oil', 'glycerol'],
-                       'skills': 'model organism',
-                       'name': 'anaerobic_ecoli'
-                       }
+    processList = get_column('data_sub2prod.csv', result_column=0)
+    processList = list(set(processList))
 
-    subprods = build_subprods('thermochemical')
-    thermochemical = {'subprods': subprods,
-                      'products': ['biodiesel', 'fatty acids', 'ethanol'],
-                      'substrates': ['oil'],
-                      'skills': None,
-                      'name': 'thermochemical'
-                      }
-    processes['anaerobic_yeast'] = anaerobic_yeast
-    processes['anaerobic_ecoli'] = anaerobic_ecoli
-    processes['thermochemical'] = thermochemical
+    for proc in processList:
+        results = get_column('data_side2sub.csv', result_column=[1:7],
+                             query_column=0, query_value=proc)
+
+        subprods = build_subprods(results)
+        substrates = []
+        products = []
+        for r in results:
+            substrates.append(r[1])
+            products.append(r[2])
+
+        processes[proc] = {'name': proc,
+                           'substrates': substrates,
+                           'products': products,
+                           'subprods': subprods
+                           }
+    return processes
+    # subprods = build_subprods('anaerobic_yeast')
+    # anaerobic_yeast = {'subprods': subprods,
+    #                    'products': ['ethanol', 'ABE'],
+    #                    'substrates': ['glucose'],
+    #                    'skills': 'ferment resistent',
+    #                    'name': 'anaerobic_yeast'
+    #                    }
+    # subprods = build_subprods('anaerobic_ecoli')
+    # anaerobic_ecoli = {'subprods': subprods,
+    #                    'products': ['fatty acids', 'pha'],
+    #                    'substrates': ['glucose', 'oil', 'glycerol'],
+    #                    'skills': 'model organism',
+    #                    'name': 'anaerobic_ecoli'
+    #                    }
+    #
+    # subprods = build_subprods('thermochemical')
+    # thermochemical = {'subprods': subprods,
+    #                   'products': ['biodiesel', 'fatty acids', 'ethanol'],
+    #                   'substrates': ['oil'],
+    #                   'skills': None,
+    #                   'name': 'thermochemical'
+    #                   }
+    # processes['anaerobic_yeast'] = anaerobic_yeast
+    # processes['anaerobic_ecoli'] = anaerobic_ecoli
+    # processes['thermochemical'] = thermochemical
 
     return processes
 
 
-def build_subprods(process):
+def build_subprods(results):
     subprods = {}
-    # extract combos relevant to given process from grand csv
-    if process == 'anaerobic_yeast':
-        glucose2ethanol = {'substrate': ['glucose'],
-                           'product': ['ethanol'],
-                           'strain': [('s1', 0.5, 'source'),
-                                      ('s2', 0.8, 'source'),
-                                      ('s3', 0.3, 'source')]
-                           }
-        glucose2abe = {'substrate': ['glucose'],
-                       'product': ['acetone', 'ethanol', 'butanol'],
-                       'strain': [('s1', 0.5, 'source'),
-                                  ('s2', 0.8, 'source'),
-                                  ('s3', 0.3, 'source')]
-                       }
-    dicts = ['glucose2ethanol', 'glucose2abe']
+    pairs = []
+    for r in results:
+        pairs.append([r[1], r[2]])
+    pairs = list(set(pairs))
+    print(pairs)
+    input()
 
-    if process == 'anaerobic_ecoli':
-        glycerol2fattyacids = {'substrate': ['glycerol'],
-                               'product': ['fattyacids'],
-                               'strain': [('s1', 0.5, 'source'),
-                                          ('s2', 0.8, 'source'),
-                                          ('s3', 0.3, 'source')]
-                               }
-        glycerol2pha = {'substrate': ['glycerol'],
-                        'product': ['pha'],
-                        'strain': [('s1', 0.5, 'source'),
-                                   ('s2', 0.8, 'source'),
-                                   ('s3', 0.3, 'source')]
-                        }
-        glucose2fattyacids = {'substrate': ['glucose'],
-                              'product': ['fattyacids'],
-                              'strain': [('s1', 0.5, 'source'),
-                                         ('s2', 0.8, 'source'),
-                                         ('s3', 0.3, 'source')]
-                              }
-        dicts = ['glycerol2fattyacids', 'glycerol2pha', 'glucose2fattyacids']
-
-    if process == 'thermochemical':
-        oil2biodiesel = {'substrate': ['oil'],
-                         'product': ['biodiesel'],
-                         'strain': [()],
-                         }
-        oil2ethanol = {'substrate': ['oil'],
-                       'product': ['ethanol'],
-                       'strain': [()],
-                       }
-        dicts = ['oil2biodiesel', 'oil2ethanol']
-
-    for dic in dicts:
-        subprods[dic] = eval(dic)
+    for pair in pairs:
+        substrate, product = pair[0], pair[1]
+        tag = '2'.join(substrate, product)
+        strains = get_column('data_sub2prod.csv', result_column=[0, 3, 5, 4],
+                             query_column=[1 2], query_value=pair)
+        subprods[tag] = {'substrate': substrate,
+                         'product': product,
+                         'strains': strains}
+    # if process == 'anaerobic_yeast':
+    #     glucose2ethanol = {'substrate': ['glucose'],
+    #                        'product': ['ethanol'],
+    #                        'strain': [('s1', 0.5, 'source'),
+    #                                   ('s2', 0.8, 'source'),
+    #                                   ('s3', 0.3, 'source')]
+    #                        }
+    #     glucose2abe = {'substrate': ['glucose'],
+    #                    'product': ['acetone', 'ethanol', 'butanol'],
+    #                    'strain': [('s1', 0.5, 'source'),
+    #                               ('s2', 0.8, 'source'),
+    #                               ('s3', 0.3, 'source')]
+    #                    }
+    # dicts = ['glucose2ethanol', 'glucose2abe']
+    #
+    # if process == 'anaerobic_ecoli':
+    #     glycerol2fattyacids = {'substrate': ['glycerol'],
+    #                            'product': ['fattyacids'],
+    #                            'strain': [('s1', 0.5, 'source'),
+    #                                       ('s2', 0.8, 'source'),
+    #                                       ('s3', 0.3, 'source')]
+    #                            }
+    #     glycerol2pha = {'substrate': ['glycerol'],
+    #                     'product': ['pha'],
+    #                     'strain': [('s1', 0.5, 'source'),
+    #                                ('s2', 0.8, 'source'),
+    #                                ('s3', 0.3, 'source')]
+    #                     }
+    #     glucose2fattyacids = {'substrate': ['glucose'],
+    #                           'product': ['fattyacids'],
+    #                           'strain': [('s1', 0.5, 'source'),
+    #                                      ('s2', 0.8, 'source'),
+    #                                      ('s3', 0.3, 'source')]
+    #                           }
+    #     dicts = ['glycerol2fattyacids', 'glycerol2pha', 'glucose2fattyacids']
+    #
+    # if process == 'thermochemical':
+    #     oil2biodiesel = {'substrate': ['oil'],
+    #                      'product': ['biodiesel'],
+    #                      'strain': [()],
+    #                      }
+    #     oil2ethanol = {'substrate': ['oil'],
+    #                    'product': ['ethanol'],
+    #                    'strain': [()],
+    #                    }
+    #     dicts = ['oil2biodiesel', 'oil2ethanol']
+    #
+    # for dic in dicts:
+    #     subprods[dic] = eval(dic)
 
     return subprods
 

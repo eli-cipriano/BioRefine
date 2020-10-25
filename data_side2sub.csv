@@ -6,9 +6,14 @@ cellulose,glucose,acid schock,0.8,s4
 cellulose,glucose,thermoenzymatic,0.6,s5
 cellulose,glucose,mechanical,0.7,s6
 cellulose,glucose,mechanical,0.7,s7
+cellulose,methane,enzymatic,0.9,s8
+cellulose,acetate,enzymatic,0.6,s9
+ammonia,ammonia,NA,1,NA
+phosphate,phosphate,NA,1,NA
 germ,oil,cold press,0.3,s8
 germ,oil,expeller press,0.5,s9
 germ,oil,solvent extraction,0.7,s10
 germ,oil,cold press,0.6,s11
 germ,oil,expeller press,0.8,s12
 germ,oil,solvent extraction,0.9,s13
+germ,germ,milling,0.99,s14

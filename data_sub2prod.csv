@@ -1,0 +1,16 @@
+process,strain,substrate,product,yield,co-products,sources
+yeast_anaerobic,wt,glucose,ethanol,0.7,NA,NA
+yeast_anaerobic,wt,glucose,isobutanol,0.7,NA,NA
+clostridia,wt,glucose,isobutanol,0.6,ethanol/acetone,NA
+clostridia,s1,glucose,isobutanol,0.97,NA,NA
+ecoli_anaerobic,wt,glucose,palmitic acid,0.8,NA,NA
+ecoli_anaerobic,s2,glucose,mdch_fattyacids,0.6,palmitic acid,NA
+ecoli_anaerobic,s3,glucose,propane_diol,0.8,NA,NA
+methanogenic,wt,glucose,shch_fattyacids,0.7,mdch_fattyacids,NA
+methanotroph,wt,methane,methanol,0.8,NA,NA
+thermochemical,reduction,methane,methanol,0.3,NA,NA
+thermochemical,transesterification,oil,biodiesel,0.9,crude_glycerol,NA
+thermochemical,separation,ammonia,fertilizer,0.6,NA,NA
+thermochemical,separation,phosphate,phosphorus,0.4,NA,NA
+thermochemical,separation,oil,cooking_oil,0.8,NA,NA
+mechanical,milling,germ,feed,0.9,NA,NA
