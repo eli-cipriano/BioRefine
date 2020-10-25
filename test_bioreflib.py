@@ -12,10 +12,14 @@ class TestBioRefine(unittest.TestCase):
         bb.write_json()
 
     def test_user_change(self):
-        pass
+        dicts = bb.call_json()
+        output = user_build('ethanol', dicts):
+        currentMods = output[1]
+        changingMod, newVal = 'process', 'thermochemical'
+        bl.user_change(
 
     def test_get_column(self):
-        results = bb.get_column('../covid_hw/test_data.csv',
+        results=bb.get_column('../covid_hw/test_data.csv',
                                 [1, 2],
                                 ['Boulder', 'Qolorado'],
                                 [0, 4])

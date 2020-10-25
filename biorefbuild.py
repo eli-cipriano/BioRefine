@@ -73,13 +73,13 @@ def build_products():
                   'value': 'med',
                   'name': 'isobutanol'
                   }
-    diols = {'processes': ['anaerobic_ecoli', 'thermochemical'],
-             'value': 'high',
-             'name': 'isobutanol'
-             }
+    biodiesel = {'processes': ['thermochemical'],
+                 'value': 'high',
+                 'name': 'biodiesel'
+                 }
     products['ethanol'] = ethanol
     products['isobutanol'] = isobutanol
-    products['diols'] = diols
+    products['biodiesel'] = biodiesel
 
     return products
 

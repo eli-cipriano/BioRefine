@@ -63,6 +63,7 @@ def main():
         fileName += '.json'
 
 # use user_build to initialize the bioprocess
+    # bb.write_json()
     dicts = bb.call_json()
     output = bl.user_build(product,
                            dicts,
@@ -80,13 +81,14 @@ def main():
                'side2', 'sub2', 'proc2', 'prod2', 'boost2']
 # plot the output and enter the decision loop
     os.system('clear')
-    print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+    bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
     while True:
 
         instruct = input('\nType "help" for a list of commands.\n\ncmd: ')
+        print(instruct)
         os.system('clear')
-        print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
         if instruct.lower() == 'help':
             print('-------------------------------------------------------'
@@ -106,7 +108,7 @@ def main():
                   '                 WARNING: This change could impact'
                   ' other modules in the process.')
 
-            print('\nDETAIL[MODULE]: DETAIL shows values associated with the
+            print('\nDETAIL[MODULE]: DETAIL shows values associated with the'
                   ' characterization of that module. This allows you to view'
                   ' things like process efficiency, crop density, product'
                   ' value, etc. for each module in the current process.'
@@ -124,8 +126,8 @@ def main():
             print('-------------------------------------------------------'
                   '------------------------')
 
-        elif instruct.lower() == 'exit':
-            write_bioprocess(currentMods, fileName)
+        elif instruct.lower().strip() == 'exit':
+            bl.write_bioprocess(currentMods, fileName)
             break
 
         elif instruct.lower()[0:4] == 'view':
@@ -133,6 +135,8 @@ def main():
 
             if len(cmd) <= 1:
                 cmd.append('help')
+            elif len(cmd) > 1 and cmd[1] not in modules:
+                cmd[1] = 'help'
             mod = cmd[1]
 
             if mod == 'help':
@@ -144,33 +148,17 @@ def main():
             elif mod in modules:
                 print('-------------------------------------------------------'
                       '------------------------')
-                avails = get_avails(mod, modules, currentMods)
+                avails = bl.get_avails(mod, modules, currentMods, dicts)
                 if avails is not None:
                     for a in avails:
                         print(a)
 
-        elif instruct.lower()[0:6] == 'detail':
-            cmd = instruct.split(' ')
-            if len(cmd) <= 1:
-                cmd.append('help')
-            mod = cmd[1]
-
         elif instruct.lower()[0:6] == 'change':
             cmd = instruct.split(' ')
-            if mod == 'help':
-                print('-------------------------------------------------------'
-                      '------------------------')
-                print('detail help...')
-                print('-------------------------------------------------------'
-                      '------------------------')
-
-            elif mod in modules:
-                print('-------------------------------------------------------'
-                      '------------------------')
-                detailMod = currentMods[mod]
-
             if len(cmd) <= 1:
                 cmd.append('help')
+            elif len(cmd) > 1 and cmd[1] not in modules:
+                cmd[1] = 'help'
             mod = cmd[1]
 
             if mod == 'help':
@@ -183,7 +171,7 @@ def main():
             elif mod in modules:
                 print('-------------------------------------------------------'
                       '------------------------')
-                avails = get_avails(mod, modules, currentMods)
+                avails = bl.get_avails(mod, modules, currentMods, dicts)
                 for a in avails:
                     print(a)
                 newVal = input('\nEnter new value from above:\n\ncmd: ')
@@ -198,52 +186,29 @@ def main():
                 sideFlow1 = output[0][1]
                 sideFlow2 = output[0][2]
                 os.system('clear')
-                print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+                bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
+        elif instruct.lower()[0:6] == 'detail':
+            cmd = instruct.split(' ')
+            if len(cmd) <= 1:
+                cmd.append('help')
+            elif len(cmd) > 1 and cmd[1] not in modules:
+                cmd[1] = 'help'
+            mod = cmd[1]
 
-def print_bioprocess(mainFlow, sideFlow1, sideFlow2):
-    print('-------------------------------------------------------'
-          '------------------------')
-    print(sideFlow1)
-    print('  |  ')
-    print(mainFlow)
-    print('  |  ')
-    print(sideFlow2)
-    print('-------------------------------------------------------'
-          '------------------------')
-    return None
+            if mod == 'help':
+                print('-------------------------------------------------------'
+                      '------------------------')
+                print('detail help...')
+                print('-------------------------------------------------------'
+                      '------------------------')
 
-
-def write_bioprocess(currentMods, fileName):
-    with open(fileName, 'w') as f:
-        json.dump(currentMods, f)
-    return None
-
-
-def get_avails(module, modules, currentMods):
-    avails = []
-    if module in modules[0:4]:
-        if module == 'product':
-            avails = get_availProducts()
-        elif module == 'process':
-            avails = currentMods['product']['processes']
-        elif module == 'substrate':
-            subprods = currentMods['process']['subprods']
-            product = currentMods['product']['name']
-            avails = []
-            for key, val in subprods.items():
-                sub, prod = key.split('2')
-                if prod == product:
-                    avails.append(sub)
-        elif module == 'material':
-            avails = currentMods['substrate']['materials']
-        return avails
-
-    else:
-        print('sideFlows coming soon!')
-        return None
-
-    return None
+            elif mod in modules:
+                print('-------------------------------------------------------'
+                      '------------------------')
+                detailMod = currentMods[mod]
+                for key, val in detailMod.items():
+                    print(key+': {}'.format(val))
 
 
 if __name__ == '__main__':

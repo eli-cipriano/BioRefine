@@ -1,5 +1,6 @@
-import biorefbuild as bb
 import sys
+import json
+import biorefbuild as bb
 
 
 def user_build(product, dicts, optimization=None, filter=None):
@@ -151,7 +152,13 @@ def user_change(changingMod, currentMods, newVal, dicts):
         changingMod2 = []
 
     if changingMod1 == 'side1':
-        pass
+        # change side1 to new newVal
+        newDict = SIDES.get(newVal)
+        currentMods['side1'] = newDict
+        # if new substrate fits with current material, we're done!
+        if material['name'] not in newDict.get('materials'):
+            changingMod = 'material'
+            newVal = newDict.get('materials')[0]
 
     if changingMod2 == 'side2':
         pass
@@ -181,3 +188,49 @@ def user_change(changingMod, currentMods, newVal, dicts):
     sideFlow1 = side1 + ar + sub1 + ar + proc1 + ar + prod1
     sideFlow2 = side2 + ar + sub2 + ar + proc2 + ar + prod2
     return [[mainFlow, sideFlow1, sideFlow2], currentMods]
+
+
+def print_bioprocess(mainFlow, sideFlow1, sideFlow2):
+    print('-------------------------------------------------------'
+          '------------------------')
+    print(sideFlow1)
+    print('  |  ')
+    print(mainFlow)
+    print('  |  ')
+    print(sideFlow2)
+    print('-------------------------------------------------------'
+          '------------------------')
+    return None
+
+
+def write_bioprocess(currentMods, fileName):
+    with open(fileName, 'w') as f:
+        json.dump(currentMods, f)
+    return None
+
+
+def get_avails(module, modules, currentMods, dicts):
+    avails = []
+    if module in modules[0:4]:
+        if module == 'product':
+            avail = dicts.get('PRODUCTS').keys()
+            print(list(dicts.get('PRODUCTS').keys()))
+        elif module == 'process':
+            avails = currentMods['product']['processes']
+        elif module == 'substrate':
+            subprods = currentMods['process']['subprods']
+            product = currentMods['product']['name']
+            avails = []
+            for key, val in subprods.items():
+                sub, prod = key.split('2')
+                if prod == product:
+                    avails.append(sub)
+        elif module == 'material':
+            avails = currentMods['substrate']['materials']
+        return avails
+
+    else:
+        print('sideFlows coming soon!')
+        return None
+
+    return None
