@@ -63,7 +63,7 @@ def main():
         fileName += '.json'
 
 # use user_build to initialize the bioprocess
-    # bb.write_json()
+    bb.write_json()
     dicts = bb.call_json()
     output = bl.user_build(product,
                            dicts,

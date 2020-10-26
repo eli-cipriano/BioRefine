@@ -27,10 +27,14 @@ def user_build(product, dicts, optimization=None, filter=None):
         currentMods['substrate'] = SUBSTRATES.get(substrate)
         currentMods['material'] = MATERIALS.get(material)
 
+        currentMods = replace_sideFlow('side1', currentMods)
+        currentMods = replace_sideFlow('side2', currentMods)
+
         side1 = MATERIALS.get(material).get('sides')[0]
         side2 = MATERIALS.get(material).get('sides')[1]
+        sideFlow1, sideFlow2 = '', ''
 
-        if side1 != 'none':
+        if side1 != 'NA':
             sub1 = SIDES.get(side1).get('substrates')[0]
             proc1 = SUBSTRATES.get(sub1).get('processes')[0]
             for key, val in PROCESSES.get(proc1).get('subprods').items():
@@ -45,7 +49,7 @@ def user_build(product, dicts, optimization=None, filter=None):
             currentMods['proc1'] = PROCESSES.get(proc1)
             currentMods['prod1'] = PRODUCTS.get(prod1)
 
-        if side2 != 'none':
+        if side2 != 'NA':
             sub2 = SIDES.get(side2).get('substrates')[0]
             proc2 = SUBSTRATES.get(sub2).get('processes')[0]
             for key, val in PROCESSES.get(proc2).get('subprods').items():
@@ -92,17 +96,19 @@ def user_change(changingMod, currentMods, newVal, dicts):
     prod2 = currentMods.get('prod2')
     boost2 = currentMods.get('boost2')
 
-    if side1 is None and side2 is None:
-        noSides = True
-    else:
-        noSides = False
-
     # begin process of updating network based on user change
     if changingMod == 'product':
+        # mod, nextMod = 'product', 'process'
+        # field, dictName = 'PRODUCTS', 'processes'
+        # output = match_mods(currentMods, changingMod, mod, newVal,
+        #                     nextMod, field, dictName)
+        # currentMods = output[0]
+        # changingMod = output[1]
+        # newVal = output[2]
+
         # change product to new newVal
         newDict = PRODUCTS.get(newVal)
         # newDict should now be a dictionary containing product-related keys
-        # maybe consider converting this dictionary into an object??
         currentMods['product'] = newDict
         # if new product fits with current process, we're done!
         if process['name'] not in newDict.get('processes'):
@@ -111,6 +117,10 @@ def user_change(changingMod, currentMods, newVal, dicts):
             newVal = newDict.get('processes')[0]
 
     if changingMod == 'process':
+        # mod, nextMod = 'product', 'process'
+        # field, dictName = 'PRODUCTS', 'processes'
+        # currentMods = match_mods(currentMods, changingMod, mod, newVal,
+        #                          nextMod, field, dictName)
         # change process to new newVal
         newDict = PROCESSES.get(newVal)
         currentMods['process'] = newDict
@@ -136,10 +146,10 @@ def user_change(changingMod, currentMods, newVal, dicts):
         if side1:
             if side1['name'] not in newDict.get('sides'):
                 newVal = newDict.get('sides')[0]
-                if newVal != 'none':
+                if newVal != 'NA':
                     changingMod = 'side1'
                 else:
-                    currentMods = delete_sideFlow('side1', currentMods)
+                    currentMods = replace_sideFlow('side1', currentMods)
 
     if changingMod == 'side1':
         # change side1 to new newVal
@@ -184,10 +194,10 @@ def user_change(changingMod, currentMods, newVal, dicts):
         if side2:
             if side2['name'] not in materialDict.get('sides'):
                 newVal = materialDict.get('sides')[0]
-                if newVal != 'none':
+                if newVal != 'NA':
                     changingMod = 'side2'
                 else:
-                    currentMods = delete_sideFlow('side2')
+                    currentMods = replace_sideFlow('side2')
 
     ar = ' -> '
     product = currentMods.get('product').get('name')
@@ -195,24 +205,24 @@ def user_change(changingMod, currentMods, newVal, dicts):
     substrate = currentMods.get('substrate').get('name')
     material = currentMods.get('material').get('name')
 
-    side1, sub1, proc1, prod1 = '', '', '', ''
-    side2, sub2, proc2, prod2 = '', '', '', ''
+    sideFlow1, sideFlow2 = '', ''
     if currentMods['side1'] is not None:
         side1 = currentMods.get('side1').get('name')
         sub1 = currentMods.get('sub1').get('name')
         proc1 = currentMods.get('proc1').get('name')
         prod1 = currentMods.get('prod1').get('name')
         # boost1 = currentMods.get('boost1').get('name')
+        sideFlow1 = side1 + ar + sub1 + ar + proc1 + ar + prod1
     if currentMods['side2'] is not None:
         side2 = currentMods.get('side2').get('name')
         sub2 = currentMods.get('sub2').get('name')
         proc2 = currentMods.get('proc2').get('name')
         prod2 = currentMods.get('prod2').get('name')
         # boost2 = currentMods.get('boost2').get('name')
+        sideFlow2 = side2 + ar + sub2 + ar + proc2 + ar + prod2
 
     mainFlow = material + ar + substrate + ar + process + ar + product
-    sideFlow1 = side1 + ar + sub1 + ar + proc1 + ar + prod1
-    sideFlow2 = side2 + ar + sub2 + ar + proc2 + ar + prod2
+
     return [[mainFlow, sideFlow1, sideFlow2], currentMods]
 
 
@@ -226,10 +236,10 @@ def match_mods(currentMods, changingMod, mod, newVal, nextMod, field, dictName):
         changingMod = nextMod
         newVal = newDict.get(field)[0]
 
-    return currentMods, changingMod
+    return [currentMods, changingMod, newVal]
 
 
-def delete_sideFlow(side, currentMods):
+def replace_sideFlow(side, currentMods):
     if side == 'side1':
         currentMods['side1'] = None
         currentMods['sub1'] = None

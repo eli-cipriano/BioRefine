@@ -1,10 +1,14 @@
 process,strain,substrate,product,yield,co-products,sources
 yeast_anaerobic,wt,glucose,ethanol,0.7,NA,NA
-yeast_anaerobic,wt,glucose,isobutanol,0.7,NA,NA
+yeast_anaerobic,s1,glucose,isobutanol,0.9,NA,NA
+yeast_anaerobic,s2,glucose,ethanol,0.99,NA,NA
+clostridia,wt,glucose,ethanol,0.6,isobutanol/acetone,NA
 clostridia,wt,glucose,isobutanol,0.6,ethanol/acetone,NA
 clostridia,s1,glucose,isobutanol,0.97,NA,NA
-ecoli_anaerobic,wt,glucose,palmitic acid,0.8,NA,NA
-ecoli_anaerobic,s2,glucose,mdch_fattyacids,0.6,palmitic acid,NA
+ecoli_anaerobic,wt,glucose,ethanol,0.8,NA,NA
+ecoli_anaerobic,wt,glucose,palmitic_acid,0.8,NA,NA
+ecoli_anaerobic,s2,glucose,mdch_fattyacids,0.6,palmitic_acid,NA
+ecoli_anaerobic,s3,acetate,mdch_fattyacids,0.8,palmitic_acid,NA
 ecoli_anaerobic,s3,glucose,propane_diol,0.8,NA,NA
 methanogenic,wt,glucose,shch_fattyacids,0.7,mdch_fattyacids,NA
 methanotroph,wt,methane,methanol,0.8,NA,NA

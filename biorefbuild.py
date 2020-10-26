@@ -65,21 +65,33 @@ def build_dicts():
 
 def build_products():
     products = {}
-    ethanol = {'processes': ['anaerobic_yeast', 'thermochemical'],
-               'value': 'low',
-               'name': 'ethanol'
-               }
-    isobutanol = {'processes': ['anaerobic_ecoli', 'anaerobic_yeast'],
-                  'value': 'med',
-                  'name': 'isobutanol'
-                  }
-    biodiesel = {'processes': ['thermochemical'],
-                 'value': 'high',
-                 'name': 'biodiesel'
-                 }
-    products['ethanol'] = ethanol
-    products['isobutanol'] = isobutanol
-    products['biodiesel'] = biodiesel
+    prodList = get_column('data_sub2prod.csv', result_column=3)
+    prodList = list(set(prodList))
+    for prod in prodList:
+        processes = []
+        results = get_column('data_sub2prod.csv', result_column=0,
+                             query_column=3, query_value=prod)
+        for r in list(set(results)):
+            processes.append(r)
+
+        products[prod] = {'name': prod,
+                          'processes': processes
+                          }
+    # ethanol = {'processes': ['anaerobic_yeast', 'thermochemical'],
+    #            'value': 'low',
+    #            'name': 'ethanol'
+    #            }
+    # isobutanol = {'processes': ['anaerobic_ecoli', 'anaerobic_yeast'],
+    #               'value': 'med',
+    #               'name': 'isobutanol'
+    #               }
+    # biodiesel = {'processes': ['thermochemical'],
+    #              'value': 'high',
+    #              'name': 'biodiesel'
+    #              }
+    # products['ethanol'] = ethanol
+    # products['isobutanol'] = isobutanol
+    # products['biodiesel'] = biodiesel
 
     return products
 
@@ -90,8 +102,10 @@ def build_processes():
     processList = list(set(processList))
 
     for proc in processList:
-        results = get_column('data_side2sub.csv', result_column=[1:7],
-                             query_column=0, query_value=proc)
+        results = get_column('data_sub2prod.csv',
+                             result_column=[1, 2, 3, 4, 5, 6],
+                             query_column=0,
+                             query_value=proc)
 
         subprods = build_subprods(results)
         substrates = []
@@ -139,19 +153,16 @@ def build_subprods(results):
     subprods = {}
     pairs = []
     for r in results:
-        pairs.append([r[1], r[2]])
-    pairs = list(set(pairs))
-    print(pairs)
-    input()
+        pairs.append('2'.join([r[1], r[2]]))
 
     for pair in pairs:
-        substrate, product = pair[0], pair[1]
-        tag = '2'.join(substrate, product)
+        substrate, product = pair.split('2')
+
         strains = get_column('data_sub2prod.csv', result_column=[0, 3, 5, 4],
-                             query_column=[1 2], query_value=pair)
-        subprods[tag] = {'substrate': substrate,
-                         'product': product,
-                         'strains': strains}
+                             query_column=[1, 2], query_value=pair.split('2'))
+        subprods[pair] = {'substrate': substrate,
+                          'product': product,
+                          'strains': strains}
     # if process == 'anaerobic_yeast':
     #     glucose2ethanol = {'substrate': ['glucose'],
     #                        'product': ['ethanol'],
@@ -206,22 +217,42 @@ def build_subprods(results):
 
 
 def build_substrates():
-
     substrates = {}
-    glucose = {'materials': ['corn', 'sugarcane'],
-               'processes': ['anaerobic_yeast',
-                             'anaerobic_ecoli',
-                             'thermochemical'],
-               'name': 'glucose'
-               }
-    oil = {'materials': ['poplar', 'oil'],
-           'processes': ['thermochemical'],
-           'name': 'oil'
-           }
+    subList = get_column('data_sub2prod.csv', result_column=2)
+    subList = list(set(subList))
+    for sub in subList:
+        processes = []
+        results = get_column('data_sub2prod.csv', result_column=0,
+                             query_column=2, query_value=sub)
+        for r in list(set(results)):
+            processes.append(r)
 
-    substrates['glucose'] = glucose
-    substrates['oil'] = oil
+        materials = []
+        results = get_column('data_mat2sub.csv', result_column=0,
+                             query_column=[1, 2, 3],
+                             query_value=[sub, sub, sub],
+                             searchOr=True)
+        for r in list(set(results)):
+            materials.append(r)
 
+        substrates[sub] = {'name': sub,
+                           'processes': processes,
+                           'materials': materials
+                           }
+    # glucose = {'materials': ['corn', 'sugarcane'],
+    #            'processes': ['anaerobic_yeast',
+    #                          'anaerobic_ecoli',
+    #                          'thermochemical'],
+    #            'name': 'glucose'
+    #            }
+    # oil = {'materials': ['poplar', 'oil'],
+    #        'processes': ['thermochemical'],
+    #        'name': 'oil'
+    #        }
+    #
+    # substrates['glucose'] = glucose
+    # substrates['oil'] = oil
+    #
     return substrates
 
 
@@ -233,12 +264,15 @@ def build_materials():
             a = line.rstrip().split(',')
             material = a[0]
             substrate = a[1]
-            side1 = a[2]
-            side2 = a[3]
-            sides = [side1, side2]
-            c1, c2, c3 = a[4].split('/')
-            comp = [float(c1), float(c2), float(c3)]
-            comp_source = a[5]
+            sides = ['NA']
+            comp = ['NA']
+            if a[2] != 'NA':
+                side1 = a[2]
+                side2 = a[3]
+                sides = [side1, side2]
+                c1, c2, c3 = a[4].split('/')
+                comp = [float(c1), float(c2), float(c3)]
+                comp_source = a[5]
             cropYield, cropSource = a[6], a[7]
 
             materials[material] = {'name': material,
@@ -265,6 +299,7 @@ def build_sides():
         for r in results:
             substrates.append(r[0])
             treatments.append(r[1:4])
+        substrates = list(set(substrates))
 
         sides[side] = {'name': side,
                        'substrates': substrates,
@@ -275,6 +310,7 @@ def build_sides():
 def get_column(file_name,
                query_column=None,
                query_value=None,
+               searchOr=False,
                result_column=1,
                date_column=None,
                header=True):
@@ -319,11 +355,18 @@ def get_column(file_name,
                         print('Please enter a column for each query.')
                         sys.exit(3)
 
-                    matches = True
-                    for i, query in enumerate(query_value):
-                        if a[query_column[i]] != query:
-                            matches = False
-                            break
+                    if searchOr:  # do an OR search in query columns
+                        matches = False
+                        for i, query in enumerate(query_value):
+                            if a[query_column[i]] == query:
+                                matches = True
+                                break
+                    else:
+                        matches = True  # do an AND search in query columns
+                        for i, query in enumerate(query_value):
+                            if a[query_column[i]] != query:
+                                matches = False
+                                break
 
                     if matches:
                         if date_column is not None:
