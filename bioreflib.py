@@ -1,6 +1,5 @@
 import sys
 import json
-import biorefbuild as bb
 
 
 def user_build(product, dicts, optimization=None, filter=None):
@@ -85,120 +84,213 @@ def user_change(changingMod, currentMods, newVal, dicts):
     process = currentMods.get('process')
     substrate = currentMods.get('substrate')
     material = currentMods.get('material')
-    side1 = currentMods.get('side1')
-    sub1 = currentMods.get('sub1')
-    proc1 = currentMods.get('proc1')
-    prod1 = currentMods.get('prod1')
-    boost1 = currentMods.get('boost1')
-    side2 = currentMods.get('side2')
-    sub2 = currentMods.get('sub2')
-    proc2 = currentMods.get('proc2')
-    prod2 = currentMods.get('prod2')
-    boost2 = currentMods.get('boost2')
+
+    if currentMods.get('side1') is not None:
+        side1 = currentMods.get('side1')
+        sub1 = currentMods.get('sub1')
+        proc1 = currentMods.get('proc1')
+        prod1 = currentMods.get('prod1')
+        boost1 = currentMods.get('boost1')
+    else:
+        side1 = {'name': 'NA'}
+        sub1 = {'name': 'NA'}
+        proc1 = {'name': 'NA'}
+        prod1 = {'name': 'NA'}
+        boost1 = {'name': 'NA'}
+
+    if currentMods.get('side2') is not None:
+        side2 = currentMods.get('side2')
+        sub2 = currentMods.get('sub2')
+        proc2 = currentMods.get('proc2')
+        prod2 = currentMods.get('prod2')
+        boost2 = currentMods.get('boost2')
+    else:
+        side2 = {'name': 'NA'}
+        sub2 = {'name': 'NA'}
+        proc2 = {'name': 'NA'}
+        prod2 = {'name': 'NA'}
+        boost2 = {'name': 'NA'}
 
     # begin process of updating network based on user change
     if changingMod == 'product':
-        # mod, nextMod = 'product', 'process'
-        # field, dictName = 'PRODUCTS', 'processes'
-        # output = match_mods(currentMods, changingMod, mod, newVal,
-        #                     nextMod, field, dictName)
-        # currentMods = output[0]
-        # changingMod = output[1]
-        # newVal = output[2]
+        product = PRODUCTS.get(newVal)
+        currentMods['product'] = product
+        # if new substrate fits with current material, we're done!
+        key = '2'.join([substrate['name'], product['name']])
+        process = PROCESSES.get(process['name'])
+        subprod = process['subprods'].get(key)
+        if subprod is None:
+            for key, val in process['subprods'].items():
+                sub, prod = key.split('2')
+                if prod == product['name']:
+                    changingMod = 'substrate'
+                    newVal = sub
 
-        # change product to new newVal
-        newDict = PRODUCTS.get(newVal)
-        # newDict should now be a dictionary containing product-related keys
-        currentMods['product'] = newDict
-        # if new product fits with current process, we're done!
-        if process['name'] not in newDict.get('processes'):
-            changingMod = 'process'
-            # defaults to first, but could be optimized with AI later on
-            newVal = newDict.get('processes')[0]
+            if changingMod == 'product':
+                changingMod = 'process'
+                newVal = product['processes'][0]
 
     if changingMod == 'process':
-        # mod, nextMod = 'product', 'process'
-        # field, dictName = 'PRODUCTS', 'processes'
-        # currentMods = match_mods(currentMods, changingMod, mod, newVal,
-        #                          nextMod, field, dictName)
-        # change process to new newVal
-        newDict = PROCESSES.get(newVal)
-        currentMods['process'] = newDict
-        # if new process fits with current substrate, we're done!
-        if substrate['name'] not in newDict.get('substrates'):
-            changingMod = 'substrate'
-            newVal = newDict.get('substrates')[0]
+        # change side1 to new newVal
+        process = PROCESSES.get(newVal)
+        currentMods['process'] = process
+        # if new substrate fits with current material, we're done!
+        key = '2'.join([substrate['name'], product['name']])
+        subprod = process.get(key)
+        if subprod is None:
+            for key, val in process.get('subprods').items():
+                sub, prod = key.split('2')
+                if prod == product['name']:
+                    changingMod = 'substrate'
+                    newVal = sub
 
     if changingMod == 'substrate':
         # change substrate to new newVal
-        newDict = SUBSTRATES.get(newVal)
-        currentMods['substrate'] = newDict
+        substrate = SUBSTRATES.get(newVal)
+        currentMods['substrate'] = substrate
         # if new substrate fits with current material, we're done!
-        if material['name'] not in newDict.get('materials'):
+        if material['name'] not in substrate.get('materials'):
             changingMod = 'material'
-            newVal = newDict.get('materials')[0]
+            newVal = substrate.get('materials')[0]
 
     if changingMod == 'material':
         # change material to new newVal
-        newDict = MATERIALS.get(newVal)
-        currentMods['material'] = newDict
+        material = MATERIALS.get(newVal)
+        currentMods['material'] = material
         # check both possible branches for side products
-        if side1:
-            if side1['name'] not in newDict.get('sides'):
-                newVal = newDict.get('sides')[0]
-                if newVal != 'NA':
+        if side1['name'] not in material.get('sides'):
+            sides = material.get('sides')
+            substrate = currentMods['substrate']['name']
+            for side in sides:
+                if side not in ['NA', substrate]:
                     changingMod = 'side1'
-                else:
-                    currentMods = replace_sideFlow('side1', currentMods)
+                    newVal = side
+            if changingMod != 'side1':
+                currentMods = replace_sideFlow('side1', currentMods)
 
     if changingMod == 'side1':
         # change side1 to new newVal
-        newDict = SIDES.get(newVal)
-        currentMods['side1'] = newDict
+        side1 = SIDES.get(newVal)
+        currentMods['side1'] = side1
         # if new substrate fits with current side1, we're done!
-        if sub1['name'] not in newDict.get('substrates'):
+        if sub1['name'] not in side1.get('substrates'):
             changingMod = 'sub1'
-            newVal = newDict.get('substrates')[0]
+            newVal = side1.get('substrates')[0]
 
     if changingMod == 'sub1':
-        # change side1 to new newVal
-        newDict = SUBSTRATES.get(newVal)
-        currentMods['sub1'] = newDict
+        # change sub1 to new newVal
+        sub1 = SUBSTRATES.get(newVal)
+        currentMods['sub1'] = sub1
         # if new substrate fits with current material, we're done!
-        if proc1['name'] not in newDict.get('processes'):
+        if proc1['name'] != 'NA':
+            key = '2'.join([sub1['name'], prod1['name']])
+            proc1 = PROCESSES.get(proc1['name'])
+            subprod = proc1['subprods'].get(key)
+            if subprod is None:
+                for key, val in proc1['subprods'].items():
+                    sub, prod = key.split('2')
+                    prod1 = currentMods['prod1']
+                    if sub == sub1['name']:
+                        changingMod = 'prod1'
+                        newVal = prod
+
+                if changingMod == 'sub1':
+                    changingMod = 'proc1'
+                    newVal = sub1['processes'][0]
+        else:
             changingMod = 'proc1'
-            newVal = newDict.get('processes')[0]
+            newVal = sub1['processes'][0]
 
     if changingMod == 'proc1':
         # change side1 to new newVal
-        newDict = PROCESSES.get(newVal)
-        currentMods['proc1'] = newDict
+        proc1 = PROCESSES.get(newVal)
+        currentMods['proc1'] = proc1
         # if new substrate fits with current material, we're done!
-        for key, val in newDict.get('subprods').items():
-            sub, prod = key.split('2')
-            sub1 = currentMods['sub1']
-            if prod == prod1['name'] and sub == sub1['name']:
-                changingMod = 'side2'
-                break
-            else:
-                changingMod = 'prod1'
-            if sub == sub1['name']:
-                newVal = prod
+        key = '2'.join([sub1['name'], prod1['name']])
+        subprod = proc1.get(key)
+        if subprod is None:
+            for key, val in proc1.get('subprods').items():
+                sub, prod = key.split('2')
+                if sub == sub1['name']:
+                    changingMod = 'prod1'
+                    newVal = prod
 
     if changingMod == 'prod1':
         #
-        newDict = PRODUCTS.get(newVal)
-        currentMods['prod1'] = newDict
+        prod1 = PRODUCTS.get(newVal)
+        currentMods['prod1'] = prod1
         materialDict = MATERIALS.get(currentMods['material']['name'])
         #
         if side2:
             if side2['name'] not in materialDict.get('sides'):
-                newVal = materialDict.get('sides')[0]
-                if newVal != 'NA':
-                    changingMod = 'side2'
-                else:
-                    currentMods = replace_sideFlow('side2')
+                sides = materialDict.get('sides')
+                substrate = currentMods['substrate']['name']
+                for side in sides:
+                    if side not in ['NA', substrate, side1['name']]:
+                        changingMod = 'side2'
+                        newVal = side
 
+                if changingMod != 'side2':
+                    currentMods = replace_sideFlow('side2', currentMods)
+
+    if changingMod == 'side2':
+        # # change side1 to new newVal
+        side2 = SIDES.get(newVal)
+        currentMods['side2'] = side2
+        # if new substrate fits with current side1, we're done!
+        if sub2:
+            if sub2['name'] not in side2.get('substrates'):
+                changingMod = 'sub2'
+                newVal = side2.get('substrates')[0]
+        else:
+            changingMod = 'sub2'
+            newVal = side2.get('substrates')[0]
+
+    if changingMod == 'sub2':
+        # change sub2 to new newVal
+        sub2 = SUBSTRATES.get(newVal)
+        currentMods['sub2'] = sub2
+        # if new substrate fits with current material, we're done!
+        if proc2['name'] != 'NA':
+            key = '2'.join([sub2['name'], prod2['name']])
+            proc2 = PROCESSES.get(proc2['name'])
+            subprod = proc2['subprods'].get(key)
+            if subprod is None:
+                for key, val in proc2['subprods'].items():
+                    sub, prod = key.split('2')
+                    if sub == sub2['name']:
+                        changingMod = 'prod2'
+                        newVal = prod
+
+                if changingMod == 'sub2':
+                    changingMod = 'proc2'
+                    newVal = sub2['processes'][0]
+        else:
+            changingMod = 'proc2'
+            newVal = sub2['processes'][0]
+
+    if changingMod == 'proc2':
+        # change side2 to new newVal
+        proc2 = PROCESSES.get(newVal)
+        currentMods['proc2'] = proc2
+        # if new substrate fits with current material, we're done!
+        # changingMod, newVal = match_make(sub2, prod2, proc2)
+        key = '2'.join([sub2['name'], prod2['name']])
+        subprod = proc2.get(key)
+        if subprod is None:
+            for key, val in proc2.get('subprods').items():
+                sub, prod = key.split('2')
+                if sub == sub2['name']:
+                    changingMod = 'prod2'
+                    newVal = prod
+
+    if changingMod == 'prod2':
+        #
+        prod2 = PRODUCTS.get(newVal)
+        currentMods['prod2'] = prod2
+        materialDict = MATERIALS.get(currentMods['material']['name'])
+
+    # reassemble bioprocess
     ar = ' -> '
     product = currentMods.get('product').get('name')
     process = currentMods.get('process').get('name')
@@ -224,19 +316,6 @@ def user_change(changingMod, currentMods, newVal, dicts):
     mainFlow = material + ar + substrate + ar + process + ar + product
 
     return [[mainFlow, sideFlow1, sideFlow2], currentMods]
-
-
-def match_mods(currentMods, changingMod, mod, newVal, nextMod, field, dictName):
-    if changingMod == mod:
-        # change mod to new newVal
-        newDict = eval('{}.get(newVal)'.format(dictName.upper()))
-        currentMods[mod] = newDict
-        # if nextMod is compatible with mod.field, we're done
-        eval("if {}['name'] not in newDict.get({}):".format(nextMod, field))
-        changingMod = nextMod
-        newVal = newDict.get(field)[0]
-
-    return [currentMods, changingMod, newVal]
 
 
 def replace_sideFlow(side, currentMods):
@@ -317,3 +396,382 @@ def get_avails(module, modules, currentMods, dicts):
         elif module in ['side1', 'side2']:
             avails = currentMods['material']['sides']
         return avails
+
+
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+
+"""This is a one-time use library for us to develop dictionaries and write
+json files"""
+
+# develop master csv of all strains and their subprods, then use
+# grep and command line filtering, my_utils.py, to get lists
+# of relevant values for each dict.
+
+
+def write_json():
+    dicts = build_dicts()
+    PRODUCTS = dicts.get('PRODUCTS')
+    PROCESSES = dicts.get('PROCESSES')
+    SUBSTRATES = dicts.get('SUBSTRATES')
+    MATERIALS = dicts.get('MATERIALS')
+    SIDES = dicts.get('SIDES')
+    with open('Jproducts.json', 'w') as f:
+        json.dump(PRODUCTS, f)
+    with open('Jprocesses.json', 'w') as f:
+        json.dump(PROCESSES, f)
+    with open('Jsubstrates.json', 'w') as f:
+        json.dump(SUBSTRATES, f)
+    with open('Jmaterials.json', 'w') as f:
+        json.dump(MATERIALS, f)
+    with open('Jsides.json', 'w') as f:
+        json.dump(SIDES, f)
+
+    return None
+
+
+def call_json():
+    dicts = {}
+    with open('Jproducts.json') as j:
+        PRODUCTS = json.load(j)
+    with open('Jprocesses.json') as j:
+        PROCESSES = json.load(j)
+    with open('Jsubstrates.json') as j:
+        SUBSTRATES = json.load(j)
+    with open('Jmaterials.json') as j:
+        MATERIALS = json.load(j)
+    with open('Jsides.json') as j:
+        SIDES = json.load(j)
+
+    tags = ['PRODUCTS', 'PROCESSES', 'SUBSTRATES', 'MATERIALS', 'SIDES']
+    for tag in tags:
+        dicts[tag] = eval(tag)
+
+    return dicts
+
+
+def build_dicts():
+    dicts = {}
+    PRODUCTS = build_products()
+    PROCESSES = build_processes()
+    SUBSTRATES = build_substrates()
+    MATERIALS = build_materials()
+    SIDES = build_sides()
+    tags = ['PRODUCTS', 'PROCESSES', 'SUBSTRATES', 'MATERIALS', 'SIDES']
+    for tag in tags:
+        dicts[tag] = eval(tag)
+
+    return dicts
+
+
+def build_products():
+    products = {}
+    prodList = get_column('data_sub2prod.csv', result_column=3)
+    prodList = list(set(prodList))
+    for prod in prodList:
+        processes = []
+        results = get_column('data_sub2prod.csv', result_column=0,
+                             query_column=3, query_value=prod)
+        for r in list(set(results)):
+            processes.append(r)
+
+        products[prod] = {'name': prod,
+                          'processes': processes
+                          }
+    return products
+
+
+def build_processes():
+    processes = {}
+    processList = get_column('data_sub2prod.csv', result_column=0)
+    processList = list(set(processList))
+
+    for proc in processList:
+        results = get_column('data_sub2prod.csv',
+                             result_column=[2, 3],
+                             query_column=0,
+                             query_value=proc)
+
+        subprods = build_subprods(results)
+        substrates = []
+        products = []
+        for r in results:
+            substrates.append(r[0])
+            products.append(r[1])
+
+        processes[proc] = {'name': proc,
+                           'substrates': substrates,
+                           'products': products,
+                           'subprods': subprods
+                           }
+    return processes
+
+
+def build_subprods(results):
+    subprods = {}
+    pairs = []
+    for r in results:
+        pairs.append('2'.join([r[0], r[1]]))
+
+    for pair in list(set(pairs)):
+        substrate, product = pair.split('2')
+
+        strains = get_column('data_sub2prod.csv', result_column=[1, 4, 5, 6],
+                             query_column=[2, 3], query_value=pair.split('2'))
+        subprods[pair] = {'substrate': substrate,
+                          'product': product,
+                          'strains': strains}
+    return subprods
+
+
+def build_substrates():
+    substrates = {}
+    subList = get_column('data_sub2prod.csv', result_column=2)
+    subList = list(set(subList))
+    for sub in subList:
+        processes = []
+        results = get_column('data_sub2prod.csv', result_column=0,
+                             query_column=2, query_value=sub)
+        for r in list(set(results)):
+            processes.append(r)
+
+        materials = []
+        results = get_column('data_mat2sub.csv', result_column=0,
+                             query_column=[1, 2, 3],
+                             query_value=[sub, sub, sub],
+                             searchOr=True)
+        for r in list(set(results)):
+            materials.append(r)
+
+        substrates[sub] = {'name': sub,
+                           'processes': processes,
+                           'materials': materials
+                           }
+    return substrates
+
+
+def build_materials():
+    materials = {}
+    with open('data_mat2sub.csv', 'r') as f:
+        header = f.readline()
+        for line in f:
+            a = line.rstrip().split(',')
+            material = a[0]
+            substrate = a[1]
+            sides = ['NA']
+            comp = ['NA']
+            if a[2] != 'NA':
+                side1 = a[2]
+                side2 = a[3]
+                sides = [side1, side2]
+                c1, c2, c3 = a[4].split('/')
+                comp = [float(c1), float(c2), float(c3)]
+                comp_source = a[5]
+            cropYield, cropSource = a[6], a[7]
+
+            materials[material] = {'name': material,
+                                   'substrate': substrate,
+                                   'sides': sides,
+                                   'comp': [comp, comp_source],
+                                   'yield': [cropYield, cropSource]
+                                   }
+    return materials
+
+
+def build_sides():
+    sides = {}
+    sidesList = get_column('data_side2sub.csv', result_column=0)
+    sidesList = list(set(sidesList))
+
+    for side in sidesList:
+        results = get_column('data_side2sub.csv', result_column=[1, 2, 3, 4],
+                             query_column=0, query_value=side)
+        substrates = []
+        treatments = []
+        for r in results:
+            substrates.append(r[0])
+            treatments.append(r[1:4])
+        substrates = list(set(substrates))
+
+        sides[side] = {'name': side,
+                       'substrates': substrates,
+                       'treatments': treatments}
+    return sides
+
+
+def get_column(file_name,
+               query_column=None,
+               query_value=None,
+               searchOr=False,
+               result_column=1,
+               date_column=None,
+               header=True):
+    """Return a list of filtered values from a specific column.
+
+    Parameters:
+    -----------
+    file_name: string, name of csv file containing data of interest.
+    query_column: int, column location contatining query of interest.
+    query_value: string, query of interest.
+    result_column: int, column location of desired results.
+    data_column: int, column location of dates.
+
+    Returns:
+    --------
+    results: a list of data-val paired items.
+    """
+    # convert list to int if only single column requested
+    if type(result_column) == list and len(result_column) <= 1:
+        result_column = result_column[0]
+
+    try:
+        with open(file_name, 'r', encoding="ISO-8859-1") as f:
+            # assumes header on data
+            if header:
+                header = f.readline()
+            results = []
+            yesterday = []
+
+            for line in f:
+                a = line.rstrip().split(',')
+
+                # no query, get entire column
+                if query_value is None:
+                    results = append_results(a,
+                                             results,
+                                             result_column)
+
+                # multiple query, check all true before appending
+                elif type(query_value) == list:
+                    if len(query_value) != len(query_column):
+                        print('Please enter a column for each query.')
+                        sys.exit(3)
+
+                    if searchOr:  # do an OR search in query columns
+                        matches = False
+                        for i, query in enumerate(query_value):
+                            if a[query_column[i]] == query:
+                                matches = True
+                                break
+                    else:
+                        matches = True  # do an AND search in query columns
+                        for i, query in enumerate(query_value):
+                            # print(query, a[query_column[i]])
+                            if a[query_column[i]] != query:
+                                matches = False
+                                break
+
+                    if matches:
+                        if date_column is not None:
+                            results = track_dates(a,
+                                                  date_column,
+                                                  results,
+                                                  result_column)
+
+                        results = append_results(a,
+                                                 results,
+                                                 result_column)
+
+                # single query, check query_column
+                elif a[query_column] == query_value:
+                    if date_column is not None:
+                        results = track_dates(a,
+                                              date_column,
+                                              results,
+                                              result_column)
+
+                    results = append_results(a,
+                                             results,
+                                             result_column)
+
+    # handle file error exception
+    except FileNotFoundError:
+        print('\nCould not read ' + file_name)
+        sys.exit(2)
+
+    return results
+
+
+def track_dates(a, date_column, results):
+
+    # check that dates are in a readable format
+    try:
+        year, month, day = a[date_column].split('-')
+        year, month, day = int(year), int(month), int(day)
+        today = dt.date(year, month, day)
+
+    except(ValueError):
+        print('\nDates in column {} not 8 digit \
+                YYYY-MM-DD format'.format(date_column))
+        sys.exit(1)
+
+    # logic for counting days and filling gaps.
+    # initialize "yesterday" for day 1
+    if not yesterday:
+        yesterday = today - dt.timedelta(days=1)
+
+    delta = today - yesterday
+    # move forward one day
+    yesterday = today
+
+    # append single zero or multiple zeros if multi columns
+    if delta.days > 1:
+        for day in range(delta.days - 1):
+            if type(result_column) == int:
+                results.append(0)
+            elif type(result_column) == list:
+                vals = []
+                for col in result_column:
+                    vals.append(0)
+                results.append(vals)
+
+    try:
+        if delta.days < 0:
+            raise ValueError
+
+    except(ValueError):
+        print('\nDates are not in order')
+        sys.exit(3)
+
+        return results
+
+
+def append_results(a, results, result_column):
+    if type(result_column) == int:
+        value = a[result_column]
+        # convert to ints if possible
+        try:
+            value = int(value)
+        except(ValueError):
+            pass
+        results.append(value)
+    elif type(result_column) == list:
+        vals = []
+        for col in result_column:
+            value = a[col]
+            # convert to ints if possible
+            try:
+                value = int(value)
+            except(ValueError):
+                pass
+            vals.append(value)
+        results.append(vals)
+    else:
+        print('Please enter integers for columns')
+        sys.exit(1)
+
+    return results
+
+
+if __name__ == '__main__':
+    main()

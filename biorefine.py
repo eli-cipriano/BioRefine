@@ -1,5 +1,20 @@
 """
-This is the main UI file for running/using BioRefine, bioreflib
+This is the main UI file for running/using BioRefine, bioreflib.
+It allows the user to view and change the Modules of the bioprocess, which are
+the discrete units of the bioprocess. For instance, the Module 'material' might
+have the value, 'corn', or the Module 'process' might have the value
+'anaerobic_yeast'. The following diagram shows the label of each Module, which
+can be used by the user to specify which Module they wish to act on.
+
+-------------------------------------------------------------------------------
+side1  -> sub1  -> proc1  -> prod1
+  |
+material -> substrate -> process -> product
+  |
+side2  -> sub2  -> proc2  -> prod2
+-------------------------------------------------------------------------------
+Use the built-in help function for more detail on how to manipulate and view
+aspects of the Modules.
 """
 
 import os
@@ -7,12 +22,12 @@ import sys
 import json
 import argparse
 import bioreflib as bl
-import biorefbuild as bb
 
 
 def main():
     # use argparse to define inputs
-
+    # TO DO: cellulose sub2 has a lot of incorrect options
+    # germ is also not good. Just update the avails function
     parser = argparse.ArgumentParser(
         description='Prints cases/deaths for a given county/state',
         prog='print_cases'
@@ -27,7 +42,7 @@ def main():
     parser.add_argument('--file',
                         dest='file',
                         type=str,
-                        help='Name of writing file',
+                        help='Name of output json file',
                         required=True)
 
     parser.add_argument('--opt',
@@ -56,25 +71,31 @@ def main():
         opt = opt.lower()
     if filt is not None:
         filt = filt.lower()
+# check that if an extension was included, that it is a json
     try:
         if fileName[-5:len(fileName)] != '.json':
             fileName += '.json'
     except:
         fileName += '.json'
 
-# use user_build to initialize the bioprocess
-    bb.write_json()
-    dicts = bb.call_json()
+
+# use write_json to update dictionaries with new values.
+# currently, this will shuffle the order due to the "set" function
+# only use when dictionaries need to be updated.
+    # bl.write_json()
+# use call_json to load in the dictionaries containing our modules
+    dicts = bl.call_json()
+# use user_build to make an initial bioprocess for a given product
     output = bl.user_build(product,
                            dicts,
                            optimization=opt,
                            filter=filt
                            )
 
-    currentMods = output[1]
-    mainFlow = output[0][0]
-    sideFlow1 = output[0][1]
-    sideFlow2 = output[0][2]
+    currentMods = output[1]  # dict with current module values
+    mainFlow = output[0][0]  # string for main process
+    sideFlow1 = output[0][1]  # string for side process 1
+    sideFlow2 = output[0][2]  # string for side process 2
 
     modules = ['product', 'process', 'substrate', 'material',
                'side1', 'sub1', 'proc1', 'prod1', 'boost1',
@@ -86,7 +107,7 @@ def main():
     while True:
 
         instruct = input('\nType "help" for a list of commands.\n\ncmd: ')
-        print(instruct)
+        print('Last Comand:', instruct)
         os.system('clear')
         bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
@@ -152,6 +173,8 @@ def main():
                 if avails is not None:
                     for a in avails:
                         print(a)
+                print('-------------------------------------------------------'
+                      '------------------------')
 
         elif instruct.lower()[0:6] == 'change':
             cmd = instruct.split(' ')
@@ -172,21 +195,34 @@ def main():
                 print('-------------------------------------------------------'
                       '------------------------')
                 avails = bl.get_avails(mod, modules, currentMods, dicts)
-                for a in avails:
-                    print(a)
-                newVal = input('\nEnter new value from above:\n\ncmd: ')
-                print('\nCHANGED: {} from {} to {}'
-                      .format(mod.upper(),
-                              currentMods[mod]['name'].upper(),
-                              newVal.upper()))
+                while True:
+                    for a in avails:
+                        print(a)
+                    print('----------------------------------------------------'
+                          '---------------------------')
+                    newVal = input('\nEnter new value from above:\n\ncmd: ')
+                    if newVal in avails:
+                        print('\nCHANGED: {} to {}'
+                              .format(mod.upper(),
+                                      newVal.upper()))
 
-                output = bl.user_change(mod, currentMods, newVal, dicts)
-                currentMods = output[1]
-                mainFlow = output[0][0]
-                sideFlow1 = output[0][1]
-                sideFlow2 = output[0][2]
-                os.system('clear')
-                bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+                        output = bl.user_change(mod, currentMods, newVal, dicts)
+                        currentMods = output[1]
+                        mainFlow = output[0][0]
+                        sideFlow1 = output[0][1]
+                        sideFlow2 = output[0][2]
+                        os.system('clear')
+                        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+                        break
+
+                    elif newVal == '':
+                        os.system('clear')
+                        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+                        break
+                    else:
+                        os.system('clear')
+                        print('Invalid entry: Please try again.')
+                        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
         elif instruct.lower()[0:6] == 'detail':
             cmd = instruct.split(' ')
@@ -208,7 +244,24 @@ def main():
                       '------------------------')
                 detailMod = currentMods[mod]
                 for key, val in detailMod.items():
-                    print(key+': {}'.format(val))
+                    if key == 'subprods':
+                        if mod in ['process', 'proc1', 'proc2']:
+                            if mod == 'process':
+                                prod = currentMods['product']['name']
+                                sub = currentMods['substrate']['name']
+                            elif mod == 'proc1':
+                                prod = currentMods['prod1']['name']
+                                sub = currentMods['sub1']['name']
+                            elif mod == 'proc2':
+                                prod = currentMods['prod2']['name']
+                                sub = currentMods['sub2']['name']
+                            key = '2'.join([sub, prod])
+                            val = val[key]['strains']
+                            print('\n', key+': ')
+                            for strain in val:
+                                print('\n       ', strain)
+                    else:
+                        print(key+': {}'.format(val))
 
 
 if __name__ == '__main__':
