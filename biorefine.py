@@ -21,9 +21,10 @@ import os
 import sys
 import json
 import argparse
-import bioreflib as bl
+import bioreflib as br
 
 # TODO: fix get_avails function
+# TODO: fix user_change to eliminate extra sideFLows (germ from sugar cane, etc)
 
 
 def main():
@@ -82,11 +83,11 @@ def main():
 # use write_json to update dictionaries with new values.
 # currently, this will shuffle the order due to the "set" function
 # only use when dictionaries need to be updated.
-    # bl.write_json()
+    # br.write_json()
 # use call_json to load in the dictionaries containing our modules
-    dicts = bl.call_json()
+    dicts = br.call_json()
 # use user_build to make an initial bioprocess for a given product
-    output = bl.user_build(product,
+    output = br.user_build(product,
                            dicts,
                            optimization=opt,
                            filter=filt
@@ -102,13 +103,13 @@ def main():
                'side2', 'sub2', 'proc2', 'prod2', 'boost2']
 # plot the output and enter the decision loop
     os.system('clear')
-    bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+    br.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
     while True:
         instruct = input('\nType "help" for a list of commands.\n\ncmd: ')
         print('User:', instruct)
         os.system('clear')
-        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+        br.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
         if instruct.lower() == 'help':
             print('-------------------------------------------------------'
@@ -117,38 +118,45 @@ def main():
                   ' bioprocess.')
 
             print('\nVIEW [MODULE]:   VIEW shows all the available'
-                  ' options for a specified module. Modules are the types'
-                  ' of steps in the bioprocess. Type "view help"'
-                  ' for more details.')
+                  ' options for a specified module.\n'
+                  '                 Modules are the types  of '
+                  ' steps in the bioprocess. \n'
+                  '                 Type "view help" for more details.')
 
             print('\nCHANGE [MODULE]: CHANGE shows all available options for a'
-                  ' specified modules, which you can then select from and'
-                  ' apply the change to the currentbioprocess.'
-                  ' Type "change help" for more details.\n'
+                  ' specified module,\n'
+                  '                 which you can then select from and'
+                  ' apply the change to the \n'
+                  '                 current bioprocess.\n'
+                  '                 Type "change help" for more details.\n'
                   '                 WARNING: This change could impact'
                   ' other modules in the process.')
 
-            print('\nDETAIL[MODULE]: DETAIL shows values associated with the'
-                  ' characterization of that module. This allows you to view'
-                  ' things like process efficiency, crop density, product'
-                  ' value, etc. for each module in the current process.'
-                  ' Type "detail help" for more details.'
-                  ' other modules in the process.')
+            print('\nDETAIL[MODULE]:  DETAIL shows values associated with the'
+                  ' characterization of \n'
+                  '                 that module. This allows you to view'
+                  ' things like process \n'
+                  '                 efficiency, crop density, product value,'
+                  ' etc. for each module \n'
+                  '                 in the current process.\n'
+                  '                 Type "detail help" for more details.')
 
             print('\nOPTIM [TYPE]:    OPTIM allows you to change the type of'
-                  ' optimization used for determining the initial bioprocess.'
-                  ' Type "optim help" for more details.')
+                  ' optimization used for \n'
+                  '                 determining the initial bioprocess.\n'
+                  '                 Type "optim help" for more details.')
 
             print('\nFILT [TYPE]:     FILT allows you to change the type of'
-                  ' filter used for determining the initial bioprocess.'
-                  ' Type "filt help" for more details.')
+                  ' filter used for \n'
+                  '                 determining the initial bioprocess.\n'
+                  '                 Type "filt help" for more details.')
 
             print('-------------------------------------------------------'
                   '------------------------')
 
         elif instruct.lower().strip() == 'exit':
             # quit the UI loop and create output file
-            bl.write_bioprocess(currentMods, fileName)
+            br.write_bioprocess(currentMods, fileName)
             break
 
         elif instruct.lower()[0:4] == 'view':
@@ -158,14 +166,17 @@ def main():
             if mod == 'help':
                 print('-------------------------------------------------------'
                       '------------------------')
-                print('view help...')
+                print('VIEW HELP: \n\nType "view [MODULE]" to see a list of'
+                      ' available options.\n\nList of Module labels:')
+                for module in modules:
+                    print(module)
                 print('-------------------------------------------------------'
                       '------------------------')
             elif mod in modules:
                 # use get_avails to generate list of available options
                 print('-------------------------------------------------------'
                       '------------------------')
-                avails = bl.get_avails(mod, modules, currentMods, dicts)  # list
+                avails = br.get_avails(mod, modules, currentMods, dicts)  # list
                 if avails is not None:
                     for a in avails:
                         print(a)
@@ -179,7 +190,11 @@ def main():
             if mod == 'help':
                 print('-------------------------------------------------------'
                       '------------------------')
-                print('change help...')
+                print('CHANGE HELP: \n\nType "change [MODULE]" to change the'
+                      ' value of a specific module to a new value\nfrom a list'
+                      ' of available options.\n\nList of Module labels:')
+                for module in modules:
+                    print(module)
                 print('-------------------------------------------------------'
                       '------------------------')
 
@@ -188,7 +203,7 @@ def main():
                 # use user_change to update the current bioproecess
                 print('-------------------------------------------------------'
                       '------------------------')
-                avails = bl.get_avails(mod, modules, currentMods, dicts)  # list
+                avails = br.get_avails(mod, modules, currentMods, dicts)  # list
                 while True:
                     # keep user in input mode until valid input received
                     for a in avails:
@@ -202,25 +217,25 @@ def main():
                               .format(mod.upper(),
                                       newVal.upper()))
 
-                        output = bl.user_change(mod, currentMods, newVal, dicts)
+                        output = br.user_change(mod, currentMods, newVal, dicts)
                         currentMods = output[1]
                         mainFlow = output[0][0]
                         sideFlow1 = output[0][1]
                         sideFlow2 = output[0][2]
                         os.system('clear')
-                        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+                        br.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
                         break
 
                     elif newVal == '':
                         # empy input, return to home
                         os.system('clear')
-                        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+                        br.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
                         break
                     else:
                         # invalid entry, try again
                         os.system('clear')
                         print('Invalid entry: Please try again.')
-                        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+                        br.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
         elif instruct.lower()[0:6] == 'detail':
             # display properties of the specified Module

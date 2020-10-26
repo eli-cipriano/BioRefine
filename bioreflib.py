@@ -7,8 +7,6 @@ bioprocess and then manipulate the steps within that process.
 import sys
 import json
 
-# TODO: minimize use of "get" so that key errors are more clear
-
 
 def user_build(product, dicts, optimization=None, filter=None):
     # initialize the bioprocess Modules for a specified product
