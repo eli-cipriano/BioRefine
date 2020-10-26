@@ -23,11 +23,11 @@ import json
 import argparse
 import bioreflib as bl
 
+# TO DO: fix get_avails function
+
 
 def main():
     # use argparse to define inputs
-    # TO DO: cellulose sub2 has a lot of incorrect options
-    # germ is also not good. Just update the avails function
     parser = argparse.ArgumentParser(
         description='Prints cases/deaths for a given county/state',
         prog='print_cases'
@@ -105,7 +105,6 @@ def main():
     bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
     while True:
-
         instruct = input('\nType "help" for a list of commands.\n\ncmd: ')
         print('Last Comand:', instruct)
         os.system('clear')
@@ -148,17 +147,13 @@ def main():
                   '------------------------')
 
         elif instruct.lower().strip() == 'exit':
+            # quit the UI loop and create output file
             bl.write_bioprocess(currentMods, fileName)
             break
 
         elif instruct.lower()[0:4] == 'view':
-            cmd = instruct.split(' ')
-
-            if len(cmd) <= 1:
-                cmd.append('help')
-            elif len(cmd) > 1 and cmd[1] not in modules:
-                cmd[1] = 'help'
-            mod = cmd[1]
+            # show list of available options
+            mod = read_input(cmd, modules)  # extract command from user
 
             if mod == 'help':
                 print('-------------------------------------------------------'
@@ -167,9 +162,10 @@ def main():
                 print('-------------------------------------------------------'
                       '------------------------')
             elif mod in modules:
+                # use get_avails to generate list of available options
                 print('-------------------------------------------------------'
                       '------------------------')
-                avails = bl.get_avails(mod, modules, currentMods, dicts)
+                avails = bl.get_avails(mod, modules, currentMods, dicts)  # list
                 if avails is not None:
                     for a in avails:
                         print(a)
@@ -177,12 +173,8 @@ def main():
                       '------------------------')
 
         elif instruct.lower()[0:6] == 'change':
-            cmd = instruct.split(' ')
-            if len(cmd) <= 1:
-                cmd.append('help')
-            elif len(cmd) > 1 and cmd[1] not in modules:
-                cmd[1] = 'help'
-            mod = cmd[1]
+            # show list of available options and ask user for input
+            mod = read_input(cmd, modules)  # extract command from user
 
             if mod == 'help':
                 print('-------------------------------------------------------'
@@ -192,16 +184,20 @@ def main():
                       '------------------------')
 
             elif mod in modules:
+                # use get_avails to generate list of available options
+                # use user_change to update the current bioproecess
                 print('-------------------------------------------------------'
                       '------------------------')
-                avails = bl.get_avails(mod, modules, currentMods, dicts)
+                avails = bl.get_avails(mod, modules, currentMods, dicts)  # list
                 while True:
+                    # keep user in input mode until valid input received
                     for a in avails:
                         print(a)
                     print('----------------------------------------------------'
                           '---------------------------')
                     newVal = input('\nEnter new value from above:\n\ncmd: ')
                     if newVal in avails:
+                        # valid input, proceed with user_change
                         print('\nCHANGED: {} to {}'
                               .format(mod.upper(),
                                       newVal.upper()))
@@ -216,21 +212,19 @@ def main():
                         break
 
                     elif newVal == '':
+                        # empy input, return to home
                         os.system('clear')
                         bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
                         break
                     else:
+                        # invalid entry, try again
                         os.system('clear')
                         print('Invalid entry: Please try again.')
                         bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
         elif instruct.lower()[0:6] == 'detail':
-            cmd = instruct.split(' ')
-            if len(cmd) <= 1:
-                cmd.append('help')
-            elif len(cmd) > 1 and cmd[1] not in modules:
-                cmd[1] = 'help'
-            mod = cmd[1]
+            # display properties of the specified Module
+            mod = read_input(cmd, modules)  # extract command from user
 
             if mod == 'help':
                 print('-------------------------------------------------------'
@@ -245,23 +239,42 @@ def main():
                 detailMod = currentMods[mod]
                 for key, val in detailMod.items():
                     if key == 'subprods':
-                        if mod in ['process', 'proc1', 'proc2']:
-                            if mod == 'process':
-                                prod = currentMods['product']['name']
-                                sub = currentMods['substrate']['name']
-                            elif mod == 'proc1':
-                                prod = currentMods['prod1']['name']
-                                sub = currentMods['sub1']['name']
-                            elif mod == 'proc2':
-                                prod = currentMods['prod2']['name']
-                                sub = currentMods['sub2']['name']
-                            key = '2'.join([sub, prod])
-                            val = val[key]['strains']
-                            print('\n', key+': ')
-                            for strain in val:
-                                print('\n       ', strain)
+                        # list strain options line by line
+                        if mod == 'process':
+                            prod = currentMods['product']['name']
+                            sub = currentMods['substrate']['name']
+                        elif mod == 'proc1':
+                            prod = currentMods['prod1']['name']
+                            sub = currentMods['sub1']['name']
+                        elif mod == 'proc2':
+                            prod = currentMods['prod2']['name']
+                            sub = currentMods['sub2']['name']
+                        key = '2'.join([sub, prod])
+                        val = val[key]['strains']
+                        print('\n', key+': ')
+                        for strain in val:
+                            print('\n       ', strain)
+
+                    elif key == 'treatments':
+                        # list treatment options line by line
+                        pass
+
                     else:
+                        # print field of detailMod
                         print(key+': {}'.format(val))
+
+
+def read_input(cmd, modules):
+    # cmd = input, modules = list of Module labels (12)
+    cmd = instruct.lower().split(' ')  # list of terms entered by user
+
+    # handle mis-inputs
+    if len(cmd) <= 1:
+        cmd.append('help')
+    elif len(cmd) > 1 and cmd[1] not in modules:
+        cmd[1] = 'help'
+    mod = cmd[1]
+    return mod
 
 
 if __name__ == '__main__':
