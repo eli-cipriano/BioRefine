@@ -23,7 +23,7 @@ import json
 import argparse
 import bioreflib as bl
 
-# TO DO: fix get_avails function
+# TODO: fix get_avails function
 
 
 def main():
@@ -106,7 +106,7 @@ def main():
 
     while True:
         instruct = input('\nType "help" for a list of commands.\n\ncmd: ')
-        print('Last Comand:', instruct)
+        print('User:', instruct)
         os.system('clear')
         bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
@@ -153,7 +153,7 @@ def main():
 
         elif instruct.lower()[0:4] == 'view':
             # show list of available options
-            mod = read_input(cmd, modules)  # extract command from user
+            mod = read_input(instruct, modules)  # extract command from user
 
             if mod == 'help':
                 print('-------------------------------------------------------'
@@ -174,7 +174,7 @@ def main():
 
         elif instruct.lower()[0:6] == 'change':
             # show list of available options and ask user for input
-            mod = read_input(cmd, modules)  # extract command from user
+            mod = read_input(instruct, modules)  # extract command from user
 
             if mod == 'help':
                 print('-------------------------------------------------------'
@@ -224,7 +224,7 @@ def main():
 
         elif instruct.lower()[0:6] == 'detail':
             # display properties of the specified Module
-            mod = read_input(cmd, modules)  # extract command from user
+            mod = read_input(instruct, modules)  # extract command from user
 
             if mod == 'help':
                 print('-------------------------------------------------------'
@@ -264,7 +264,7 @@ def main():
                         print(key+': {}'.format(val))
 
 
-def read_input(cmd, modules):
+def read_input(instruct, modules):
     # cmd = input, modules = list of Module labels (12)
     cmd = instruct.lower().split(' ')  # list of terms entered by user
 

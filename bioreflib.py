@@ -1,18 +1,29 @@
+"""
+This library aids the development of an integrated bioprocess for a specified
+product. It is used primarily by biorefine.py to allow the user to create a
+bioprocess and then manipulate the steps within that process.
+"""
+
 import sys
 import json
 
+# TODO: minimize use of "get" so that key errors are more clear
+
 
 def user_build(product, dicts, optimization=None, filter=None):
-    currentMods = {}
-    PRODUCTS = dicts.get('PRODUCTS')
-    PROCESSES = dicts.get('PROCESSES')
-    SUBSTRATES = dicts.get('SUBSTRATES')
-    MATERIALS = dicts.get('MATERIALS')
-    SIDES = dicts.get('SIDES')
+    # initialize the bioprocess Modules for a specified product
 
-    ar = ' -> '
-    currentMods['product'] = PRODUCTS.get(product)
+    currentMods = {}  # dictionary of current Module values
+    PRODUCTS = dicts['PRODUCTS']  # dictionary of all known products
+    PROCESSES = dicts['PROCESSES']  # dictionary of all known processes
+    SUBSTRATES = dicts['SUBSTRATES']  # dictionary of all known substrates
+    MATERIALS = dicts['MATERIALS']  # dictionary of all known materials
+    SIDES = dicts['SIDES']  # dictionary of all known side materials
+
+    ts = ' -> '  # transition string
+    currentMods['product'] = PRODUCTS.get(product)  # update product
     if optimization is None and filter is None:
+        # no opt or filt specified, choose first available module value
         process = PRODUCTS.get(product).get('processes')[0]
         for key, val in PROCESSES.get(process).get('subprods').items():
             sub, prod = key.split('2')
@@ -21,11 +32,13 @@ def user_build(product, dicts, optimization=None, filter=None):
                 break
         material = SUBSTRATES.get(substrate).get('materials')[0]
 
-        mainFlow = material + ar + substrate + ar + process + ar + product
+        #  write output string and update Module values
+        mainFlow = material + ts + substrate + ts + process + ts + product
         currentMods['process'] = PROCESSES.get(process)
         currentMods['substrate'] = SUBSTRATES.get(substrate)
         currentMods['material'] = MATERIALS.get(material)
 
+        # initialize and update sideFlow Module values, output strings
         currentMods = replace_sideFlow('side1', currentMods)
         currentMods = replace_sideFlow('side2', currentMods)
 
@@ -42,7 +55,7 @@ def user_build(product, dicts, optimization=None, filter=None):
                     prod1 = prod
                     break
 
-            sideFlow1 = side1 + ar + sub1 + ar + proc1 + ar + prod1
+            sideFlow1 = side1 + ts + sub1 + ts + proc1 + ts + prod1
             currentMods['side1'] = SIDES.get(side1)
             currentMods['sub1'] = SUBSTRATES.get(sub1)
             currentMods['proc1'] = PROCESSES.get(proc1)
@@ -57,13 +70,14 @@ def user_build(product, dicts, optimization=None, filter=None):
                     prod2 = prod
                     break
 
-            sideFlow2 = side2 + ar + sub2 + ar + proc2 + ar + prod2
+            sideFlow2 = side2 + ts + sub2 + ts + proc2 + ts + prod2
             currentMods['side2'] = SIDES.get(side2)
             currentMods['sub2'] = SUBSTRATES.get(sub2)
             currentMods['proc2'] = PROCESSES.get(proc2)
             currentMods['prod2'] = PRODUCTS.get(prod2)
 
     else:
+        # filter available Module values and optimize decision making
         print('Optimization and Filtering options coming soon!')
         sys.exit(0)
 
@@ -79,12 +93,12 @@ def user_change(changingMod, currentMods, newVal, dicts):
     SIDES = dicts.get('SIDES')
 
     # extract current state of network
-    # maybe these can be objects with properties? Or just dicts?
+    # these could eventually be made as objects in a Module class
     product = currentMods.get('product')
     process = currentMods.get('process')
     substrate = currentMods.get('substrate')
     material = currentMods.get('material')
-
+    # testing for presence of sideFlows
     if currentMods.get('side1') is not None:
         side1 = currentMods.get('side1')
         sub1 = currentMods.get('sub1')
@@ -111,14 +125,16 @@ def user_change(changingMod, currentMods, newVal, dicts):
         prod2 = {'name': 'NA'}
         boost2 = {'name': 'NA'}
 
-    # begin process of updating network based on user change
+    # begin process of updating Module values based on initial input
     if changingMod == 'product':
+        # change process to new newVal
         product = PRODUCTS.get(newVal)
         currentMods['product'] = product
         # if new substrate fits with current material, we're done!
         key = '2'.join([substrate['name'], product['name']])
         process = PROCESSES.get(process['name'])
         subprod = process['subprods'].get(key)
+        # if new product fits with current process & substrate, we're done!
         if subprod is None:
             for key, val in process['subprods'].items():
                 sub, prod = key.split('2')
@@ -131,12 +147,12 @@ def user_change(changingMod, currentMods, newVal, dicts):
                 newVal = product['processes'][0]
 
     if changingMod == 'process':
-        # change side1 to new newVal
+        # change process to new newVal
         process = PROCESSES.get(newVal)
         currentMods['process'] = process
-        # if new substrate fits with current material, we're done!
+        # if new process fits with current substrate, we're done!
         key = '2'.join([substrate['name'], product['name']])
-        subprod = process.get(key)
+        subprod = process['subprods'].get(key)
         if subprod is None:
             for key, val in process.get('subprods').items():
                 sub, prod = key.split('2')
@@ -157,7 +173,7 @@ def user_change(changingMod, currentMods, newVal, dicts):
         # change material to new newVal
         material = MATERIALS.get(newVal)
         currentMods['material'] = material
-        # check both possible branches for side products
+        # if new material fits with current side1, we're done!
         if side1['name'] not in material.get('sides'):
             sides = material.get('sides')
             substrate = currentMods['substrate']['name']
@@ -172,7 +188,7 @@ def user_change(changingMod, currentMods, newVal, dicts):
         # change side1 to new newVal
         side1 = SIDES.get(newVal)
         currentMods['side1'] = side1
-        # if new substrate fits with current side1, we're done!
+        # if new side1 fits with current sub1, we're done!
         if sub1['name'] not in side1.get('substrates'):
             changingMod = 'sub1'
             newVal = side1.get('substrates')[0]
@@ -181,7 +197,7 @@ def user_change(changingMod, currentMods, newVal, dicts):
         # change sub1 to new newVal
         sub1 = SUBSTRATES.get(newVal)
         currentMods['sub1'] = sub1
-        # if new substrate fits with current material, we're done!
+        # if new sub1 fits with current proc1 and prod1, we're done!
         if proc1['name'] != 'NA':
             key = '2'.join([sub1['name'], prod1['name']])
             proc1 = PROCESSES.get(proc1['name'])
@@ -202,12 +218,12 @@ def user_change(changingMod, currentMods, newVal, dicts):
             newVal = sub1['processes'][0]
 
     if changingMod == 'proc1':
-        # change side1 to new newVal
+        # change proc1 to new newVal
         proc1 = PROCESSES.get(newVal)
         currentMods['proc1'] = proc1
-        # if new substrate fits with current material, we're done!
+        # if new proc1 fits with current product, we're done!
         key = '2'.join([sub1['name'], prod1['name']])
-        subprod = proc1.get(key)
+        subprod = proc1['subprods'].get(key)
         if subprod is None:
             for key, val in proc1.get('subprods').items():
                 sub, prod = key.split('2')
@@ -250,7 +266,7 @@ def user_change(changingMod, currentMods, newVal, dicts):
         # change sub2 to new newVal
         sub2 = SUBSTRATES.get(newVal)
         currentMods['sub2'] = sub2
-        # if new substrate fits with current material, we're done!
+        # if new sub2 fits with current proc2 and prod2, we're done!
         if proc2['name'] != 'NA':
             key = '2'.join([sub2['name'], prod2['name']])
             proc2 = PROCESSES.get(proc2['name'])
@@ -270,13 +286,12 @@ def user_change(changingMod, currentMods, newVal, dicts):
             newVal = sub2['processes'][0]
 
     if changingMod == 'proc2':
-        # change side2 to new newVal
+        # change proc2 to new newVal
         proc2 = PROCESSES.get(newVal)
         currentMods['proc2'] = proc2
-        # if new substrate fits with current material, we're done!
-        # changingMod, newVal = match_make(sub2, prod2, proc2)
+        # if new proc2 fits with current product, we're done!
         key = '2'.join([sub2['name'], prod2['name']])
-        subprod = proc2.get(key)
+        subprod = proc2['subprods'].get(key)
         if subprod is None:
             for key, val in proc2.get('subprods').items():
                 sub, prod = key.split('2')
@@ -285,35 +300,38 @@ def user_change(changingMod, currentMods, newVal, dicts):
                     newVal = prod
 
     if changingMod == 'prod2':
-        #
+        # change proc2 to new newVal
         prod2 = PRODUCTS.get(newVal)
         currentMods['prod2'] = prod2
-        materialDict = MATERIALS.get(currentMods['material']['name'])
+        # end of updates, add  "boost" Modules to
+        # increase amount of side material,
+        # i.e switchgrass, algae, food waste, etc.
 
     # reassemble bioprocess
-    ar = ' -> '
-    product = currentMods.get('product').get('name')
-    process = currentMods.get('process').get('name')
-    substrate = currentMods.get('substrate').get('name')
-    material = currentMods.get('material').get('name')
+
+    ts = ' -> '  # transition string
+    product = currentMods['product']['name']
+    process = currentMods['process']['name']
+    substrate = currentMods['substrate']['name']
+    material = currentMods['material']['name']
 
     sideFlow1, sideFlow2 = '', ''
     if currentMods['side1'] is not None:
-        side1 = currentMods.get('side1').get('name')
-        sub1 = currentMods.get('sub1').get('name')
-        proc1 = currentMods.get('proc1').get('name')
-        prod1 = currentMods.get('prod1').get('name')
+        side1 = currentMods['side1']['name']
+        sub1 = currentMods['sub1']['name']
+        proc1 = currentMods['proc1']['name']
+        prod1 = currentMods['prod1']['name']
         # boost1 = currentMods.get('boost1').get('name')
-        sideFlow1 = side1 + ar + sub1 + ar + proc1 + ar + prod1
+        sideFlow1 = side1 + ts + sub1 + ts + proc1 + ts + prod1
     if currentMods['side2'] is not None:
-        side2 = currentMods.get('side2').get('name')
-        sub2 = currentMods.get('sub2').get('name')
-        proc2 = currentMods.get('proc2').get('name')
-        prod2 = currentMods.get('prod2').get('name')
+        side2 = currentMods['side2']['name']
+        sub2 = currentMods['sub2']['name']
+        proc2 = currentMods['proc2']['name']
+        prod2 = currentMods['prod2']['name']
         # boost2 = currentMods.get('boost2').get('name')
-        sideFlow2 = side2 + ar + sub2 + ar + proc2 + ar + prod2
+        sideFlow2 = side2 + ts + sub2 + ts + proc2 + ts + prod2
 
-    mainFlow = material + ar + substrate + ar + process + ar + product
+    mainFlow = material + ts + substrate + ts + process + ts + product
 
     return [[mainFlow, sideFlow1, sideFlow2], currentMods]
 
@@ -357,7 +375,7 @@ def get_avails(module, modules, currentMods, dicts):
     avails = []
     if module in modules[0:4]:
         if module == 'product':
-            avails = list(dicts.get('PRODUCTS').keys())
+            avails = list(dicts['PRODUCTS'].keys())
         elif module == 'process':
             avails = currentMods['product']['processes']
         elif module == 'substrate':
@@ -421,11 +439,11 @@ json files"""
 
 def write_json():
     dicts = build_dicts()
-    PRODUCTS = dicts.get('PRODUCTS')
-    PROCESSES = dicts.get('PROCESSES')
-    SUBSTRATES = dicts.get('SUBSTRATES')
-    MATERIALS = dicts.get('MATERIALS')
-    SIDES = dicts.get('SIDES')
+    PRODUCTS = dicts['PRODUCTS']
+    PROCESSES = dicts['PROCESSES']
+    SUBSTRATES = dicts['SUBSTRATES']
+    MATERIALS = dicts['MATERIALS']
+    SIDES = dicts['SIDES']
     with open('Jproducts.json', 'w') as f:
         json.dump(PRODUCTS, f)
     with open('Jprocesses.json', 'w') as f:
