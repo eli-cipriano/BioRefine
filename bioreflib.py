@@ -44,7 +44,7 @@ def user_build(product, dicts, optimization=None, filter=None):
         side2 = MATERIALS.get(material)['sides'][1]
         sideFlow1, sideFlow2 = '', ''
 
-        if side1 != 'NA':
+        if side1 != 'none':
             sub1 = SIDES.get(side1)['substrates'][0]
             proc1 = SUBSTRATES.get(sub1)['processes'][0]
             for key, val in PROCESSES.get(proc1)['subprods'].items():
@@ -59,7 +59,7 @@ def user_build(product, dicts, optimization=None, filter=None):
             currentMods['proc1'] = PROCESSES.get(proc1)
             currentMods['prod1'] = PRODUCTS.get(prod1)
 
-        if side2 != 'NA':
+        if side2 != 'none':
             sub2 = SIDES.get(side2)['substrates'][0]
             proc2 = SUBSTRATES.get(sub2)['processes'][0]
             for key, val in PROCESSES.get(proc2)['subprods'].items():
@@ -104,11 +104,11 @@ def user_change(changingMod, currentMods, newVal, dicts):
         prod1 = currentMods['prod1']
         boost1 = currentMods['boost1']
     else:
-        side1 = {'name': 'NA'}
-        sub1 = {'name': 'NA'}
-        proc1 = {'name': 'NA'}
-        prod1 = {'name': 'NA'}
-        boost1 = {'name': 'NA'}
+        side1 = {'name': 'none'}
+        sub1 = {'name': 'none'}
+        proc1 = {'name': 'none'}
+        prod1 = {'name': 'none'}
+        boost1 = {'name': 'none'}
 
     if currentMods.get('side2') is not None:
         side2 = currentMods['side2']
@@ -117,11 +117,11 @@ def user_change(changingMod, currentMods, newVal, dicts):
         prod2 = currentMods['prod2']
         boost2 = currentMods['boost2']
     else:
-        side2 = {'name': 'NA'}
-        sub2 = {'name': 'NA'}
-        proc2 = {'name': 'NA'}
-        prod2 = {'name': 'NA'}
-        boost2 = {'name': 'NA'}
+        side2 = {'name': 'none'}
+        sub2 = {'name': 'none'}
+        proc2 = {'name': 'none'}
+        prod2 = {'name': 'none'}
+        boost2 = {'name': 'none'}
 
     # begin process of updating Module values based on initial input
     if changingMod == 'product':
@@ -171,32 +171,45 @@ def user_change(changingMod, currentMods, newVal, dicts):
         # change material to new newVal
         material = MATERIALS.get(newVal)
         currentMods['material'] = material
-        # if new material fits with current side1, we're done!
+        # if new material fits with current side1, check side2
         if side1['name'] not in material['sides']:
             sides = material['sides']
-            substrate = currentMods['substrate']['name']
             for side in sides:
-                if side not in ['NA', substrate]:
+                if side not in ['none', 'NA', substrate['name']]:
                     changingMod = 'side1'
                     newVal = side
             if changingMod != 'side1':
                 currentMods = replace_sideFlow('side1', currentMods)
+                newVal = ''
+                changingMod = 'prod1'
+        # if new material fits with current side2, we're done!
+        elif side2['name'] not in material['sides']:
+            sides = material['sides']
+            for side in sides:
+                if side not in ['none', 'NA', substrate['name'], side1['name']]:
+                    changingMod = 'side2'
+                    newVal = side
+            if changingMod != 'side2':
+                currentMods = replace_sideFlow('side2', currentMods)
 
     if changingMod == 'side1':
-        # change side1 to new newVal
-        side1 = SIDES.get(newVal)
-        currentMods['side1'] = side1
-        # if new side1 fits with current sub1, we're done!
-        if sub1['name'] not in side1['substrates']:
-            changingMod = 'sub1'
-            newVal = side1['substrates'][0]
+        if newVal == 'none':
+            currentMods = replace_sideFlow('side1', currentMods)
+        else:
+            # change side1 to new newVal
+            side1 = SIDES.get(newVal)
+            currentMods['side1'] = side1
+            # if new side1 fits with current sub1, we're done!
+            if sub1['name'] not in side1['substrates']:
+                changingMod = 'sub1'
+                newVal = side1['substrates'][0]
 
     if changingMod == 'sub1':
         # change sub1 to new newVal
         sub1 = SUBSTRATES.get(newVal)
         currentMods['sub1'] = sub1
         # if new sub1 fits with current proc1 and prod1, we're done!
-        if proc1['name'] != 'NA':
+        if proc1['name'] != 'none':
             key = '2'.join([sub1['name'], prod1['name']])
             proc1 = PROCESSES.get(proc1['name'])
             subprod = proc1['subprods'].get(key)
@@ -230,42 +243,41 @@ def user_change(changingMod, currentMods, newVal, dicts):
                     newVal = prod
 
     if changingMod == 'prod1':
-        #
+        # change prod1 to new newVal
         prod1 = PRODUCTS.get(newVal)
         currentMods['prod1'] = prod1
         materialDict = MATERIALS.get(currentMods['material']['name'])
-        #
-        if side2:
-            if side2['name'] not in materialDict['sides']:
-                sides = materialDict['sides']
-                substrate = currentMods['substrate']['name']
-                for side in sides:
-                    if side not in ['NA', substrate, side1['name']]:
-                        changingMod = 'side2'
-                        newVal = side
+        # if new material fits with current side2, we're done!
+        if side2['name'] not in materialDict['sides']:
+            sides = materialDict['sides']
+            substrate = currentMods['substrate']['name']
+            for side in sides:
+                if side not in ['none', 'NA', substrate, side1['name']]:
+                    changingMod = 'side2'
+                    newVal = side
 
-                if changingMod != 'side2':
-                    currentMods = replace_sideFlow('side2', currentMods)
+            if changingMod != 'side2':
+                currentMods = replace_sideFlow('side2', currentMods)
 
     if changingMod == 'side2':
-        # # change side1 to new newVal
-        side2 = SIDES.get(newVal)
-        currentMods['side2'] = side2
-        # if new substrate fits with current side1, we're done!
-        if sub2:
+        if newVal == 'none':
+            currentMods = replace_sideFlow('side2', currentMods)
+        else:
+            # # change side2 to new newVal
+            side2 = SIDES.get(newVal)
+            currentMods['side2'] = side2
+            # if new side2 fits with current sub2, we're done!
+
             if sub2['name'] not in side2['substrates']:
                 changingMod = 'sub2'
                 newVal = side2['substrates'][0]
-        else:
-            changingMod = 'sub2'
-            newVal = side2['substrates'][0]
 
     if changingMod == 'sub2':
         # change sub2 to new newVal
         sub2 = SUBSTRATES.get(newVal)
         currentMods['sub2'] = sub2
         # if new sub2 fits with current proc2 and prod2, we're done!
-        if proc2['name'] != 'NA':
+        if proc2['name'] != 'none':
             key = '2'.join([sub2['name'], prod2['name']])
             proc2 = PROCESSES.get(proc2['name'])
             subprod = proc2['subprods'].get(key)
@@ -335,6 +347,7 @@ def user_change(changingMod, currentMods, newVal, dicts):
 
 
 def replace_sideFlow(side, currentMods):
+    # initialize or reset values for sideFlows
     if side == 'side1':
         currentMods['side1'] = None
         currentMods['sub1'] = None
@@ -364,6 +377,7 @@ def print_bioprocess(mainFlow, sideFlow1, sideFlow2):
 
 
 def write_bioprocess(currentMods, fileName):
+    # saves current bioprocess to json, eventually write to text
     with open(fileName, 'w') as f:
         json.dump(currentMods, f)
     return None
@@ -401,14 +415,14 @@ def get_avails(module, modules, currentMods, dicts):
                     avails.append(prod)
         elif module in ['proc1', 'proc2']:
             if module == 'proc1':
-                avails = currentMods['prod1']['processes']
+                avails = currentMods['sub1']['processes']
             elif module == 'proc2':
-                avails = currentMods['prod2']['processes']
+                avails = currentMods['sub2']['processes']
         elif module in ['sub1', 'sub2']:
             if module == 'sub1':
-                avails = currentMods['proc1']['substrates']
+                avails = currentMods['side1']['substrates']
             elif module == 'sub2':
-                avails = currentMods['proc2']['substrates']
+                avails = currentMods['side2']['substrates']
         elif module in ['side1', 'side2']:
             avails = currentMods['material']['sides']
         return avails
@@ -493,12 +507,12 @@ def build_dicts():
 def build_products():
     products = {}
     prodList = get_column('data_sub2prod.csv', result_column=3)
-    prodList = list(set(prodList))
+    prodList = sorted(list(set(prodList)))
     for prod in prodList:
         processes = []
         results = get_column('data_sub2prod.csv', result_column=0,
                              query_column=3, query_value=prod)
-        for r in list(set(results)):
+        for r in sorted(list(set(results))):
             processes.append(r)
 
         products[prod] = {'name': prod,
@@ -510,7 +524,7 @@ def build_products():
 def build_processes():
     processes = {}
     processList = get_column('data_sub2prod.csv', result_column=0)
-    processList = list(set(processList))
+    processList = sorted(list(set(processList)))
 
     for proc in processList:
         results = get_column('data_sub2prod.csv',
@@ -526,8 +540,8 @@ def build_processes():
             products.append(r[1])
 
         processes[proc] = {'name': proc,
-                           'substrates': substrates,
-                           'products': products,
+                           'substrates': sorted(list(set(substrates))),
+                           'products': sorted(list(set(products))),
                            'subprods': subprods
                            }
     return processes
@@ -539,7 +553,7 @@ def build_subprods(results):
     for r in results:
         pairs.append('2'.join([r[0], r[1]]))
 
-    for pair in list(set(pairs)):
+    for pair in sorted(list(set(pairs))):
         substrate, product = pair.split('2')
 
         strains = get_column('data_sub2prod.csv', result_column=[1, 4, 5, 6],
@@ -553,12 +567,12 @@ def build_subprods(results):
 def build_substrates():
     substrates = {}
     subList = get_column('data_sub2prod.csv', result_column=2)
-    subList = list(set(subList))
+    subList = sorted(list(set(subList)))
     for sub in subList:
         processes = []
         results = get_column('data_sub2prod.csv', result_column=0,
                              query_column=2, query_value=sub)
-        for r in list(set(results)):
+        for r in sorted(list(set(results))):
             processes.append(r)
 
         materials = []
@@ -566,7 +580,7 @@ def build_substrates():
                              query_column=[1, 2, 3],
                              query_value=[sub, sub, sub],
                              searchOr=True)
-        for r in list(set(results)):
+        for r in sorted(list(set(results))):
             materials.append(r)
 
         substrates[sub] = {'name': sub,
@@ -607,7 +621,7 @@ def build_materials():
 def build_sides():
     sides = {}
     sidesList = get_column('data_side2sub.csv', result_column=0)
-    sidesList = list(set(sidesList))
+    sidesList = sorted(list(set(sidesList)))
 
     for side in sidesList:
         results = get_column('data_side2sub.csv', result_column=[1, 2, 3, 4],
@@ -617,7 +631,7 @@ def build_sides():
         for r in results:
             substrates.append(r[0])
             treatments.append(r[1:4])
-        substrates = list(set(substrates))
+        substrates = sorted(list(set(substrates)))
 
         sides[side] = {'name': side,
                        'substrates': substrates,
