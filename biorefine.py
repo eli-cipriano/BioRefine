@@ -311,10 +311,6 @@ def main():
         elif instruct.lower() == 'map':
             # display properties of the specified Module
             print(modLayout)
-            input('\nPress any key to continue...')
-            os.system('clear')
-            print('User: ')
-            brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
 
 def read_input(instruct, modules):
