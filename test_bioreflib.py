@@ -1,5 +1,5 @@
 import unittest
-import bioreflib as bl
+import bioreflib as brf
 import os
 
 # os.system('clear')
@@ -8,8 +8,8 @@ import os
 class TestBioRefine(unittest.TestCase):
 
     def test_dicts(self):
-        # bl.write_json()  # sometimes germ comes out as a biogas side...
-        dicts = bl.call_json()
+        brf.write_json()  # sometimes germ comes out as a biogas side...
+        dicts = brf.call_json()
         # print(dicts['MATERIALS']['biogas']['sides'])
         # print(dicts['SIDES']['germ'])
         # print(dicts['SUBSTRATES']['germ'])
@@ -23,8 +23,8 @@ class TestBioRefine(unittest.TestCase):
                              mat)
 
     def test_user_build(self):
-        dicts = bl.call_json()
-        output = bl.user_build('ethanol', dicts)
+        dicts = brf.call_json()
+        output = brf.user_build('ethanol', dicts)
         currentMods = output[1]
         product = currentMods['product']['name']
         self.assertEqual(product, 'ethanol')
@@ -32,13 +32,13 @@ class TestBioRefine(unittest.TestCase):
         mainFlow = output[0][0]
         sideFlow1 = output[0][1]
         sideFlow2 = output[0][2]
-        # bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+        # brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
         return output
 
     def test_user_change(self):
-        dicts = bl.call_json()
-        output = bl.user_build('ethanol', dicts)
+        dicts = brf.call_json()
+        output = brf.user_build('ethanol', dicts)
         currentMods = output[1]
         product = currentMods['product']['name']
         self.assertEqual(product, 'ethanol')
@@ -47,38 +47,45 @@ class TestBioRefine(unittest.TestCase):
         mainFlow = output[0][0]
         sideFlow1 = output[0][1]
         sideFlow2 = output[0][2]
-        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+        brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
         print('CASE1')
-        changingMod, newVal = 'product', 'fertilizer'
-        output = bl.user_change(changingMod, currentMods, newVal, dicts)
+        changingMod, newVal = 'material', 'sugar cane'
+        output = brf.user_change(changingMod, currentMods, newVal, dicts)
         mainFlow = output[0][0]
         sideFlow1 = output[0][1]
         sideFlow2 = output[0][2]
         currentMods = output[1]
-        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+        brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
         print('CASE2')
-        changingMod, newVal = 'product', 'cooking_oil'
-        output = bl.user_change(changingMod, currentMods, newVal, dicts)
+        changingMod, newVal = 'sub1', 'methane'
+        output = brf.user_change(changingMod, currentMods, newVal, dicts)
         mainFlow = output[0][0]
         sideFlow1 = output[0][1]
         sideFlow2 = output[0][2]
         currentMods = output[1]
-        bl.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+        brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+        print('CASE3')
+        changingMod, newVal = 'product', 'methanol'
+        output = brf.user_change(changingMod, currentMods, newVal, dicts)
+        mainFlow = output[0][0]
+        sideFlow1 = output[0][1]
+        sideFlow2 = output[0][2]
+        currentMods = output[1]
+        brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
     def test_get_column(self):
-        results = bl.get_column('../covid_hw/test_data.csv',
-                                query_column=[1, 2],
-                                query_value=['Boulder', 'Qolorado'],
-                                result_column=[0, 4])
+        results = brf.get_column('../covid_hw/test_data.csv',
+                                 query_column=[1, 2],
+                                 query_value=['Boulder', 'Qolorado'],
+                                 result_column=[0, 4])
         self.assertEqual(results[0], ['2020-03-14', 1])
         self.assertEqual(len(results), 1)
 
     def test_build_subprods(self):
-        processes = bl.build_processes()
+        processes = brf.build_processes()
         # os.system('clear')
         a = processes['methanotroph']['subprods']
         key = list(a.keys())[0]
-        print(key)
         self.assertEqual(a[key]['strains'][0][0], 'wt')
 
 
