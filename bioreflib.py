@@ -41,10 +41,13 @@ def user_build(product, dicts, optimization=None, filter=None):
         currentMods = replace_sideFlow('side2', currentMods)
 
         side1 = MATERIALS.get(material)['sides'][0]
-        side2 = MATERIALS.get(material)['sides'][1]
+        try:
+            side2 = MATERIALS.get(material)['sides'][1]
+        except(IndexError):
+            side2 = 'NA'
         sideFlow1, sideFlow2 = '', ''
 
-        if side1 != 'none':
+        if side1 != 'NA':
             sub1 = SIDES.get(side1)['substrates'][0]
             proc1 = SUBSTRATES.get(sub1)['processes'][0]
             for key, val in PROCESSES.get(proc1)['subprods'].items():
@@ -59,7 +62,7 @@ def user_build(product, dicts, optimization=None, filter=None):
             currentMods['proc1'] = PROCESSES.get(proc1)
             currentMods['prod1'] = PRODUCTS.get(prod1)
 
-        if side2 != 'none':
+        if side2 != 'NA':
             sub2 = SIDES.get(side2)['substrates'][0]
             proc2 = SUBSTRATES.get(sub2)['processes'][0]
             for key, val in PROCESSES.get(proc2)['subprods'].items():
