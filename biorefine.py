@@ -36,12 +36,14 @@ def main():
 
     parser.add_argument('--product',
                         dest='product',
+                        default='ethanol',
                         type=str,
                         help='Name of desired product',
                         required=False)
 
     parser.add_argument('--file',
                         dest='file',
+                        default='J1.json',
                         type=str,
                         help='Name of output json file',
                         required=False)
@@ -68,10 +70,6 @@ def main():
     filt = args.filter
     fileName = args.file
 
-    if product is None:
-        product = 'ethanol'
-    if fileName is None:
-        fileName = 'J1.json'
     if opt is not None:
         opt = opt.lower()
     if filt is not None:
