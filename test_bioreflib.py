@@ -23,8 +23,7 @@ class TestBioRefine(unittest.TestCase):
                              mat)
 
     def test_user_build(self):
-        dicts = brf.call_json()
-        output = brf.user_build('ethanol', dicts)
+        output = brf.user_build('ethanol')
         currentMods = output[1]
         product = currentMods['product']['name']
         self.assertEqual(product, 'ethanol')
@@ -37,8 +36,7 @@ class TestBioRefine(unittest.TestCase):
         return output
 
     def test_user_change(self):
-        dicts = brf.call_json()
-        output = brf.user_build('ethanol', dicts)
+        output = brf.user_build('ethanol')
         currentMods = output[1]
         product = currentMods['product']['name']
         self.assertEqual(product, 'ethanol')
@@ -50,7 +48,7 @@ class TestBioRefine(unittest.TestCase):
         brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
         print('CASE1')
         changingMod, newVal = 'material', 'sugar cane'
-        output = brf.user_change(changingMod, currentMods, newVal, dicts)
+        output = brf.user_change(changingMod, newVal, currentMods)
         mainFlow = output[0][0]
         sideFlow1 = output[0][1]
         sideFlow2 = output[0][2]
@@ -58,7 +56,7 @@ class TestBioRefine(unittest.TestCase):
         brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
         print('CASE2')
         changingMod, newVal = 'sub1', 'methane'
-        output = brf.user_change(changingMod, currentMods, newVal, dicts)
+        output = brf.user_change(changingMod, newVal, currentMods)
         mainFlow = output[0][0]
         sideFlow1 = output[0][1]
         sideFlow2 = output[0][2]
@@ -66,7 +64,7 @@ class TestBioRefine(unittest.TestCase):
         brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
         print('CASE3')
         changingMod, newVal = 'product', 'methanol'
-        output = brf.user_change(changingMod, currentMods, newVal, dicts)
+        output = brf.user_change(changingMod, newVal, currentMods)
         mainFlow = output[0][0]
         sideFlow1 = output[0][1]
         sideFlow2 = output[0][2]

@@ -86,12 +86,9 @@ def main():
 # currently, this will shuffle the order due to the "set" function
 # only use when dictionaries need to be updated.
     brf.write_json()
-# use call_json to load in the dictionaries containing our modules
-    dicts = brf.call_json()
 # use user_build to make an initial bioprocess for a given product
     try:
         output = brf.user_build(product.lower(),
-                                dicts,
                                 optimization=opt,
                                 filter=filt
                                 )
@@ -196,7 +193,7 @@ def main():
                 # use get_avails to generate list of available options
                 print('-------------------------------------------------------'
                       '------------------------')
-                avails = brf.get_avails(mod, modules, currentMods, dicts)  # list
+                avails = brf.get_avails(mod, modules, currentMods)  # list
                 if avails is not None:
                     for a in avails:
                         if a != 'NA':
@@ -225,7 +222,7 @@ def main():
                 # use user_change to update the current bioproecess
                 print('-------------------------------------------------------'
                       '------------------------')
-                avails = brf.get_avails(mod, modules, currentMods, dicts)  # list
+                avails = brf.get_avails(mod, modules, currentMods)  # list
                 while True:
                     # keep user in input mode until valid input received
                     for a in avails:
@@ -245,7 +242,7 @@ def main():
                               .format(mod.upper(),
                                       newVal.upper()))
 
-                        output = brf.user_change(mod, currentMods, newVal, dicts)
+                        output = brf.user_change(mod, newVal, currentMods)
                         currentMods = output[1]
                         mainFlow = output[0][0]
                         sideFlow1 = output[0][1]
