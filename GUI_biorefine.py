@@ -102,8 +102,11 @@ def callback_UpdateMap(cm, modules, window):
 
 def callback_Save():
     fileName = sg.popup_get_text('Save Bioprocess As:', 'File Saver')
-    if '.json' not in fileName.split('.'):
-        fileName = ''.join([fileName, '.json'])
+    if fileName:
+        if 'json' not in fileName.split('.'):
+            fileName = ''.join([fileName, '.json'])
+    else:
+        fileName = 'exit'
     return fileName
 
 
@@ -140,8 +143,9 @@ def main(cm, modules, output, changingMod=None):
         elif event == 'exit':
             fileName = callback_Save()
             window.close()
-            brf.print_bioprocess(output[0][0], output[0][1], output[0][2])
-            brf.write_bioprocess(cm, fileName)
+            if fileName != 'exit':
+                brf.print_bioprocess(output[0][0], output[0][1], output[0][2])
+                brf.write_bioprocess(cm, fileName)
             break
 
 
