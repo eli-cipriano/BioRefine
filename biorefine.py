@@ -242,7 +242,7 @@ def main():
                               .format(mod.upper(),
                                       newVal.upper()))
 
-                        output = brf.user_change(mod, currentMods, newVal)
+                        output = brf.user_change(mod, newVal, currentMods)
                         currentMods = output[1]
                         mainFlow = output[0][0]
                         sideFlow1 = output[0][1]

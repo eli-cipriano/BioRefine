@@ -165,7 +165,7 @@ def user_change(changingMod, newVal, currentMods):
         if side1['name'] not in material['sides']:
             sides = material['sides']
             for side in sides:
-                if side not in ['', 'NA', substrate['name']]:
+                if side not in ['NA', substrate['name']]:
                     changingMod = 'side1'
                     newVal = side
             if changingMod != 'side1':
@@ -176,7 +176,7 @@ def user_change(changingMod, newVal, currentMods):
         elif side2['name'] not in material['sides']:
             sides = material['sides']
             for side in sides:
-                if side not in ['', 'NA', substrate['name'], side1['name']]:
+                if side not in ['NA', substrate['name'], side1['name']]:
                     changingMod = 'side2'
                     newVal = side
             if changingMod != 'side2':
@@ -225,7 +225,6 @@ def user_change(changingMod, newVal, currentMods):
         # if new proc1 fits with current product, we're done!
         key = '2'.join([sub1['name'], prod1['name']])
         subprod = proc1['subprods'].get(key)
-        print(subprod is None)
         if subprod is None:
             for key, val in proc1['subprods'].items():
                 sub, prod = key.split('2')

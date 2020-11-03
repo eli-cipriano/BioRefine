@@ -35,7 +35,7 @@ def make_layout(modValues, header=''):
     # Set up the buttons.
     # Then add text for the results.
 
-    layout = [[sg.Text(header)],
+    layout = [[sg.Text(header, key='header')],
               [sg.Button(modValues['side1'], key='side1'), sg.Text(' --> '),
                sg.Button(modValues['sub1'], key='sub1'), sg.Text(' --> '),
                sg.Button(modValues['proc1'], key='proc1'), sg.Text(' --> '),
@@ -73,20 +73,24 @@ def make_layout(modValues, header=''):
 
 
 def callback_UserChange(changingMod, avails, currentMods, window):
-    print(changingMod)
     title = 'Change {}:'.format(changingMod)
     window['changeMod'].update(title)
     # add clear option for sideFlows
     if changingMod[0:4] == 'side':
-        avails.append('none')
+        if 'none' not in avails:
+            avails.append('none')
+        if 'NA' in avails:
+            avails.remove('NA')
+
     window['changeOptions'].update(values=avails)
-    window['changeOptions'].update(' ')
+    window['changeOptions'].update(value='')
 
 
 def callback_ApplyChange(window, newVal):
     window['changeMod'].update('Change ___:')
     window['changeOptions'].update(values=[''])
-
+    window['changeOptions'].update(value='')
+    #clearwindow['header'].update('Changed to {}...'.format(newVal))
     return newVal
 
 
@@ -96,7 +100,14 @@ def callback_UpdateMap(cm, modules, window):
             window[mod].update(cm[mod]['name'])
 
 
-def main(cm, modules, header='', changingMod=None):
+def callback_Save():
+    fileName = sg.popup_get_text('Save Bioprocess As:', 'File Saver')
+    if '.json' not in fileName.split('.'):
+        fileName = ''.join([fileName, '.json'])
+    return fileName
+
+
+def main(cm, modules, output, changingMod=None):
     modValues = {}
     for mod in modules:
         if mod[0:5] != 'boost':
@@ -106,23 +117,32 @@ def main(cm, modules, header='', changingMod=None):
 
     while True:             # Event Loop
         event, values = window.read()
+
+        # check that conditions are met for applying changes
+        canApply = changingMod is not None and values['changeOptions'] != ''
+
         if event == sg.WIN_CLOSED:
             break
 
-        elif event == 'Apply Change' and changingMod is not None:
+        elif event == 'Apply Change' and canApply:
             newVal = callback_ApplyChange(window, values['changeOptions'])
             output = brf.user_change(changingMod, newVal, cm)
             cm = output[1]
-            brf.print_bioprocess(output[0][0], output[0][1], output[0][2])
-            for key, vals in cm.items():
-                print(key, ':', vals)
             callback_UpdateMap(cm, modules, window)
             changingMod = None
 
         elif event in modules:
-            changingMod = event
-            avails = brf.get_avails(changingMod, modules, cm)
-            callback_UserChange(changingMod, avails, cm, window)
+            if cm[event]['name'] != '':
+                changingMod = event
+                avails = brf.get_avails(changingMod, modules, cm)
+                callback_UserChange(changingMod, avails, cm, window)
+
+        elif event == 'exit':
+            fileName = callback_Save()
+            window.close()
+            brf.print_bioprocess(output[0][0], output[0][1], output[0][2])
+            brf.write_bioprocess(cm, fileName)
+            break
 
 
 if __name__ == '__main__':
@@ -137,4 +157,4 @@ if __name__ == '__main__':
                'side1', 'sub1', 'proc1', 'prod1', 'boost1',
                'side2', 'sub2', 'proc2', 'prod2', 'boost2']
 
-    main(currentMods, modules)
+    main(currentMods, modules, output)
