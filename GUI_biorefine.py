@@ -103,6 +103,7 @@ def callback_UpdateMap(cm, modules, window):
 def callback_Save():
     fileName = sg.popup_get_text('Save Bioprocess As:', 'File Saver')
     if fileName:
+        fileName = fileName.strip(' ')
         if 'json' not in fileName.split('.'):
             fileName = ''.join([fileName, '.json'])
     else:
