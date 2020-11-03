@@ -8,10 +8,11 @@ import sys
 import json
 
 
-def user_build(product, dicts, optimization=None, filter=None):
+def user_build(product, optimization=None, filter=None):
     # initialize the bioprocess Modules for a specified product
 
     currentMods = {}  # dictionary of current Module values
+    dicts = call_json()  # acquire libraries
     PRODUCTS = dicts['PRODUCTS']  # dictionary of all known products
     PROCESSES = dicts['PROCESSES']  # dictionary of all known processes
     SUBSTRATES = dicts['SUBSTRATES']  # dictionary of all known substrates
@@ -85,8 +86,9 @@ def user_build(product, dicts, optimization=None, filter=None):
     return [[mainFlow, sideFlow1, sideFlow2], currentMods]
 
 
-def user_change(changingMod, currentMods, newVal, dicts):
+def user_change(changingMod, currentMods, newVal):
     # extract main dicts:
+    dicts = call_json()
     PRODUCTS = dicts['PRODUCTS']
     PROCESSES = dicts['PROCESSES']
     SUBSTRATES = dicts['SUBSTRATES']
@@ -386,8 +388,9 @@ def write_bioprocess(currentMods, fileName):
     return None
 
 
-def get_avails(module, modules, currentMods, dicts):
+def get_avails(module, modules, currentMods):
     avails = []
+    dicts = call_json()
     if module in modules[0:4]:
         if module == 'product':
             avails = list(dicts['PRODUCTS'].keys())
