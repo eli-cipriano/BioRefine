@@ -86,7 +86,7 @@ def user_build(product, optimization=None, filter=None):
     return [[mainFlow, sideFlow1, sideFlow2], currentMods]
 
 
-def user_change(changingMod, currentMods, newVal):
+def user_change(changingMod, newVal, currentMods):
     # extract main dicts:
     dicts = call_json()
     PRODUCTS = dicts['PRODUCTS']
@@ -102,31 +102,16 @@ def user_change(changingMod, currentMods, newVal):
     substrate = currentMods['substrate']
     material = currentMods['material']
     # testing for presence of sideFlows
-    if currentMods.get('side1') is not None:
-        side1 = currentMods['side1']
-        sub1 = currentMods['sub1']
-        proc1 = currentMods['proc1']
-        prod1 = currentMods['prod1']
-        boost1 = currentMods['boost1']
-    else:
-        side1 = {'name': 'none'}
-        sub1 = {'name': 'none'}
-        proc1 = {'name': 'none'}
-        prod1 = {'name': 'none'}
-        boost1 = {'name': 'none'}
-
-    if currentMods.get('side2') is not None:
-        side2 = currentMods['side2']
-        sub2 = currentMods['sub2']
-        proc2 = currentMods['proc2']
-        prod2 = currentMods['prod2']
-        boost2 = currentMods['boost2']
-    else:
-        side2 = {'name': 'none'}
-        sub2 = {'name': 'none'}
-        proc2 = {'name': 'none'}
-        prod2 = {'name': 'none'}
-        boost2 = {'name': 'none'}
+    side1 = currentMods['side1']
+    sub1 = currentMods['sub1']
+    proc1 = currentMods['proc1']
+    prod1 = currentMods['prod1']
+    boost1 = currentMods['boost1']
+    side2 = currentMods['side2']
+    sub2 = currentMods['sub2']
+    proc2 = currentMods['proc2']
+    prod2 = currentMods['prod2']
+    boost2 = currentMods['boost2']
 
     # begin process of updating Module values based on initial input
     if changingMod == 'product':
@@ -180,7 +165,7 @@ def user_change(changingMod, currentMods, newVal):
         if side1['name'] not in material['sides']:
             sides = material['sides']
             for side in sides:
-                if side not in ['none', 'NA', substrate['name']]:
+                if side not in ['', 'NA', substrate['name']]:
                     changingMod = 'side1'
                     newVal = side
             if changingMod != 'side1':
@@ -191,7 +176,7 @@ def user_change(changingMod, currentMods, newVal):
         elif side2['name'] not in material['sides']:
             sides = material['sides']
             for side in sides:
-                if side not in ['none', 'NA', substrate['name'], side1['name']]:
+                if side not in ['', 'NA', substrate['name'], side1['name']]:
                     changingMod = 'side2'
                     newVal = side
             if changingMod != 'side2':
@@ -214,7 +199,7 @@ def user_change(changingMod, currentMods, newVal):
         sub1 = SUBSTRATES.get(newVal)
         currentMods['sub1'] = sub1
         # if new sub1 fits with current proc1 and prod1, we're done!
-        if proc1['name'] != 'none':
+        if proc1['name'] != '':
             key = '2'.join([sub1['name'], prod1['name']])
             proc1 = PROCESSES.get(proc1['name'])
             subprod = proc1['subprods'].get(key)
@@ -240,6 +225,7 @@ def user_change(changingMod, currentMods, newVal):
         # if new proc1 fits with current product, we're done!
         key = '2'.join([sub1['name'], prod1['name']])
         subprod = proc1['subprods'].get(key)
+        print(subprod is None)
         if subprod is None:
             for key, val in proc1['subprods'].items():
                 sub, prod = key.split('2')
@@ -249,15 +235,16 @@ def user_change(changingMod, currentMods, newVal):
 
     if changingMod == 'prod1':
         # change prod1 to new newVal
-        prod1 = PRODUCTS.get(newVal)
-        currentMods['prod1'] = prod1
+        if newVal:
+            prod1 = PRODUCTS.get(newVal)
+            currentMods['prod1'] = prod1
         materialDict = MATERIALS.get(currentMods['material']['name'])
         # if new material fits with current side2, we're done!
         if side2['name'] not in materialDict['sides']:
             sides = materialDict['sides']
             substrate = currentMods['substrate']['name']
             for side in sides:
-                if side not in ['none', 'NA', substrate, side1['name']]:
+                if side not in ['', 'NA', substrate, side1['name']]:
                     changingMod = 'side2'
                     newVal = side
 
@@ -282,7 +269,7 @@ def user_change(changingMod, currentMods, newVal):
         sub2 = SUBSTRATES.get(newVal)
         currentMods['sub2'] = sub2
         # if new sub2 fits with current proc2 and prod2, we're done!
-        if proc2['name'] != 'none':
+        if proc2['name'] != '':
             key = '2'.join([sub2['name'], prod2['name']])
             proc2 = PROCESSES.get(proc2['name'])
             subprod = proc2['subprods'].get(key)
@@ -323,30 +310,30 @@ def user_change(changingMod, currentMods, newVal):
         # i.e switchgrass, algae, food waste, etc.
 
     # reassemble bioprocess
-
     ts = ' -> '  # transition string
     product = currentMods['product']['name']
     process = currentMods['process']['name']
     substrate = currentMods['substrate']['name']
     material = currentMods['material']['name']
 
-    sideFlow1, sideFlow2 = '', ''
-    if currentMods['side1'] is not None:
-        side1 = currentMods['side1']['name']
-        sub1 = currentMods['sub1']['name']
-        proc1 = currentMods['proc1']['name']
-        prod1 = currentMods['prod1']['name']
-        # boost1 = currentMods.get('boost1').get('name')
-        sideFlow1 = side1 + ts + sub1 + ts + proc1 + ts + prod1
-    if currentMods['side2'] is not None:
-        side2 = currentMods['side2']['name']
-        sub2 = currentMods['sub2']['name']
-        proc2 = currentMods['proc2']['name']
-        prod2 = currentMods['prod2']['name']
-        # boost2 = currentMods.get('boost2').get('name')
-        sideFlow2 = side2 + ts + sub2 + ts + proc2 + ts + prod2
-
     mainFlow = material + ts + substrate + ts + process + ts + product
+
+    side1 = currentMods['side1']['name']
+    sub1 = currentMods['sub1']['name']
+    proc1 = currentMods['proc1']['name']
+    prod1 = currentMods['prod1']['name']
+    # boost1 = currentMods.get('boost1').get('name')
+    side2 = currentMods['side2']['name']
+    sub2 = currentMods['sub2']['name']
+    proc2 = currentMods['proc2']['name']
+    prod2 = currentMods['prod2']['name']
+    # boost2 = currentMods.get('boost2').get('name')
+
+    sideFlow1, sideFlow2 = '', ''
+    if side1 != '':
+        sideFlow1 = side1 + ts + sub1 + ts + proc1 + ts + prod1
+    if side2 != '':
+        sideFlow2 = side2 + ts + sub2 + ts + proc2 + ts + prod2
 
     return [[mainFlow, sideFlow1, sideFlow2], currentMods]
 
@@ -354,17 +341,17 @@ def user_change(changingMod, currentMods, newVal):
 def replace_sideFlow(side, currentMods):
     # initialize or reset values for sideFlows
     if side == 'side1':
-        currentMods['side1'] = None
-        currentMods['sub1'] = None
-        currentMods['proc1'] = None
-        currentMods['prod1'] = None
-        currentMods['boost1'] = None
+        currentMods['side1'] = {'name': ''}
+        currentMods['sub1'] = {'name': ''}
+        currentMods['proc1'] = {'name': ''}
+        currentMods['prod1'] = {'name': ''}
+        currentMods['boost1'] = {'name': ''}
     elif side == 'side2':
-        currentMods['side2'] = None
-        currentMods['sub2'] = None
-        currentMods['proc2'] = None
-        currentMods['prod2'] = None
-        currentMods['boost2'] = None
+        currentMods['side2'] = {'name': ''}
+        currentMods['sub2'] = {'name': ''}
+        currentMods['proc2'] = {'name': ''}
+        currentMods['prod2'] = {'name': ''}
+        currentMods['boost2'] = {'name': ''}
     return currentMods
 
 

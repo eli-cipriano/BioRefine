@@ -29,6 +29,9 @@ def make_layout(modValues, header=''):
     sg.theme('DarkAmber')
     divider = '---------------------------------------------------------------'\
         '---------------------------------------------------------------'
+    spacer = '                                                                '\
+        '                                                       '
+
     # Set up the buttons.
     # Then add text for the results.
 
@@ -60,7 +63,10 @@ def make_layout(modValues, header=''):
               [sg.Text('Change ____:', key='changeMod')],
 
               [sg.Combo(values=[''], key='changeOptions', size=(20, 1)),
-               sg.Button('Apply Change')]
+               sg.Button('Apply Change')],
+
+              [sg.Text(spacer),
+               sg.Button('Save & Quit', key='exit')]
               ]
 
     return layout
@@ -74,45 +80,55 @@ def callback_UserChange(changingMod, avails, currentMods, window):
     if changingMod[0:4] == 'side':
         avails.append('none')
     window['changeOptions'].update(values=avails)
+    window['changeOptions'].update(' ')
 
 
-def callback_ApplyChange(currentMods, window):
+def callback_ApplyChange(window, newVal):
+    window['changeMod'].update('Change ___:')
+    window['changeOptions'].update(values=[''])
+
+    return newVal
 
 
-def main(cm, modules, dicts, header=''):
-    modValues = {'product': cm['product']['name'],
-                 'process': cm['process']['name'],
-                 'substrate': cm['substrate']['name'],
-                 'material': cm['material']['name'],
-                 'side1': cm['side1']['name'],
-                 'sub1': cm['sub1']['name'],
-                 'proc1': cm['proc1']['name'],
-                 'prod1': cm['prod1']['name'],
-                 'side2': cm['side2']['name'],
-                 'sub2': cm['sub2']['name'],
-                 'proc2': cm['proc2']['name'],
-                 'prod2': cm['prod2']['name']
-                 }
+def callback_UpdateMap(cm, modules, window):
+    for mod in modules:
+        if mod[0:5] != 'boost':
+            window[mod].update(cm[mod]['name'])
+
+
+def main(cm, modules, header='', changingMod=None):
+    modValues = {}
+    for mod in modules:
+        if mod[0:5] != 'boost':
+            modValues[mod] = cm[mod]['name']
+
     window = sg.Window('Your Current Bioprocess', make_layout(modValues))
 
     while True:             # Event Loop
         event, values = window.read()
         if event == sg.WIN_CLOSED:
             break
-        elif event == 'Apply Change':
-            callback_ApplyChange(cm, window)
-        elif event is not None:
+
+        elif event == 'Apply Change' and changingMod is not None:
+            newVal = callback_ApplyChange(window, values['changeOptions'])
+            output = brf.user_change(changingMod, newVal, cm)
+            cm = output[1]
+            brf.print_bioprocess(output[0][0], output[0][1], output[0][2])
+            for key, vals in cm.items():
+                print(key, ':', vals)
+            callback_UpdateMap(cm, modules, window)
+            changingMod = None
+
+        elif event in modules:
             changingMod = event
-            avails = brf.get_avails(changingMod, modules, cm, dicts)
+            avails = brf.get_avails(changingMod, modules, cm)
             callback_UserChange(changingMod, avails, cm, window)
 
 
 if __name__ == '__main__':
 
     # brf.write_json()
-    dicts = brf.call_json()
     output = brf.user_build('ethanol',
-                            dicts,
                             optimization=None,
                             filter=None
                             )
@@ -121,4 +137,4 @@ if __name__ == '__main__':
                'side1', 'sub1', 'proc1', 'prod1', 'boost1',
                'side2', 'sub2', 'proc2', 'prod2', 'boost2']
 
-    main(currentMods, modules, dicts)
+    main(currentMods, modules)
