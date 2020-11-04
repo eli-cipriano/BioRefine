@@ -7,6 +7,19 @@ This code can be run in a pysimple trinket.io
 See: https://pysimplegui.trinket.io/demo-programs#/demo-programs/the-basic-pysimplegui-program
 """
 
+"""
+brf functions used: 
+ - user_change
+ this allows user to input variables and altering the map to
+ maintain relationship integrity
+ - get_avails
+ i don't know what this does
+ - print_bioprocess
+ Prints the final map to the commandline
+ - write_bioprocess
+ Writes the final map to a file of your choice
+ 
+"""
 
 def make_layout(modValues, header=''):
     """
@@ -35,7 +48,7 @@ def make_layout(modValues, header=''):
     # Set up the buttons.
     # Then add text for the results.
 
-    layout = [[sg.Text(header, key='header')],
+    tab1_layout = [[sg.Text(header, key='header')],
               [sg.Button(modValues['side1'], key='side1'), sg.Text(' --> '),
                sg.Button(modValues['sub1'], key='sub1'), sg.Text(' --> '),
                sg.Button(modValues['proc1'], key='proc1'), sg.Text(' --> '),
@@ -68,11 +81,33 @@ def make_layout(modValues, header=''):
               [sg.Text(spacer),
                sg.Button('Save & Quit', key='exit')]
               ]
+    
+    tab2_layout = [[sg.T('This is inside tab 2')],
+               [sg.In(key='in')]]
+    
+    layout = [[sg.TabGroup([[sg.Tab('Tab 1', tab1_layout), sg.Tab('Tab 2', tab2_layout)]])]]
 
     return layout
 
 
 def callback_UserChange(changingMod, avails, currentMods, window):
+    """
+    This appears to add the values of the dropdown list.
+    
+    Parameters
+    -------------
+    changingMod = 
+    
+    avails = 
+    
+    currentMods = 
+    
+    window= 
+    
+    Returns
+    -------------
+    
+    """
     title = 'Change {}:'.format(changingMod)
     window['changeMod'].update(title)
     # add clear option for sideFlows
@@ -87,16 +122,32 @@ def callback_UserChange(changingMod, avails, currentMods, window):
 
 
 def callback_ApplyChange(window, newVal):
+    """
+    Updates the window based on output from callback_UserChange
+    
+    Parameters
+    -------------
+    window = 
+    
+    newVal = 
+    
+    Returns
+    -------------
+    
+    """
+    # Why is there are values and value? Why are both empty? #
     window['changeMod'].update('Change ___:')
     window['changeOptions'].update(values=[''])
     window['changeOptions'].update(value='')
     #clearwindow['header'].update('Changed to {}...'.format(newVal))
-    return newVal
+    return newVal # where does newVal go?
 
 
 def callback_UpdateMap(cm, modules, window):
     for mod in modules:
+      # What does boost do? #
         if mod[0:5] != 'boost':
+        # Updates a mod of the window . . .
             window[mod].update(cm[mod]['name'])
 
 
@@ -115,6 +166,7 @@ def main(cm, modules, output, changingMod=None):
     modValues = {}
     for mod in modules:
         if mod[0:5] != 'boost':
+          # Here's this line again. What does it do? #
             modValues[mod] = cm[mod]['name']
 
     window = sg.Window('Your Current Bioprocess', make_layout(modValues))
@@ -128,6 +180,7 @@ def main(cm, modules, output, changingMod=None):
         if event == sg.WIN_CLOSED:
             break
 
+        # 
         elif event == 'Apply Change' and canApply:
             newVal = callback_ApplyChange(window, values['changeOptions'])
             output = brf.user_change(changingMod, newVal, cm)
