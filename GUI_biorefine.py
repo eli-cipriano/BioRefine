@@ -82,8 +82,12 @@ def make_layout(modValues, header=''):
                sg.Button('Save & Quit', key='exit')]
               ]
     
-    tab2_layout = [[sg.T('This is inside tab 2')],
-               [sg.In(key='in')]]
+    tab2_layout = [[sg.T('Get Details')],
+    
+              [sg.Text('See details for:', key='changeDetails')],
+
+              [sg.Combo(values=[''], key='changeOptionsDetail', size=(20, 1)),
+               sg.Button('Enter')],]
     
     layout = [[sg.TabGroup([[sg.Tab('Tab 1', tab1_layout), sg.Tab('Tab 2', tab2_layout)]])]]
 
