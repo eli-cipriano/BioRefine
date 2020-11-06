@@ -85,7 +85,8 @@ def make_layout(modValues, header=''):
 
                    [sg.Text('See details for:', key='changeDetails')],
 
-                   [sg.Combo(values=[''], key='changeOptionsDetail', size=(20, 1)),
+                   [sg.Combo(values=['Coming Soon :)'],
+                             key='changeOptionsDetail', size=(20, 1)),
                     sg.Button('Enter')], ]
 
     layout = [[sg.TabGroup([[sg.Tab('Tab 1', tab1_layout),
