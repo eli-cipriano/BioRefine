@@ -1,7 +1,38 @@
 """
 This library aids the development of an integrated bioprocess for a specified
 product. It is used primarily by biorefine.py to allow the user to create a
-bioprocess and then manipulate the steps within that process.
+bioprocess and then manipulate the steps within that process. The bioprocess is
+made up of 12 modules:
+
+    [product, process, substrate, material,
+    side1, sub1, proc1, prod1,
+    side2, sub2, proc2, prod2]
+
+Two additional mods boost1, and boost2 may be added in later. The bioprocess is
+built and updated in the same directional flow. It starts at the "top", which is
+the "product" module, and goes through process and substrate, ending on the
+"material" module. After these four steps, if a side material exists, the flow
+will go to the "side1" module and populate the subsequent modules. If a second
+side material exists, the flow jumps to the "side2" module and populates those
+subsequent modules.
+
+The main database is made up of three CSV files that describe the properties of
+various raw materials (mat2sub), waste by-products (side2sub), and
+chemical processes (sub2prod).
+
+The two main functions for the bioprocessing side of the code are:
+- user_build: is used to initialize a bioprocess based on a given product.
+
+- user_change: is used to update the values of the bioprocess every time there
+is a change. The user is only allowed to pick a new value from a list of valid
+options. For example, if the user wants to change the current material, they
+will only be allowed to pick from a list of materials that are associated with
+the module immediately infront of it, which is "substrate". Similarly, to change
+"sub1", it must be compatible with "side1", according to the directional flow of
+the program.
+
+The main functions for the database side of the code are:
+- build_
 """
 
 import sys
@@ -9,6 +40,21 @@ import json
 
 
 def user_build(product, optimization=None, filter=None):
+    """
+    This function builds the "Bioprocess", which is the network of modules and
+    their values. The user only specifies the product, and then the rest of the
+    values are ensured to be "compatible" and then chosen alphabetically.
+    Eventually we want to implement some sort of optimization where it always
+    chooses the "best" value.
+
+    Compatibility of neighboring modules is more complex for some modules than
+    others. For materials, it's jsut a matter of checking that a material exists
+    within the "materials" key of the chosen substrate. For compatability of
+    substrates, processes, and products, we have to check that within that
+    process, it is actually possible to convert the chosen substrate to the
+    specified product, which is described by the "sub2prod" key in the process
+    module.
+    """
     # initialize the bioprocess Modules for a specified product
 
     currentMods = {}  # dictionary of current Module values
@@ -48,6 +94,7 @@ def user_build(product, optimization=None, filter=None):
             side2 = 'NA'
         sideFlow1, sideFlow2 = '', ''
 
+        # if a by-product exists from the chosen material, populate sideFlow1
         if side1 != 'NA':
             sub1 = SIDES.get(side1)['substrates'][0]
             proc1 = SUBSTRATES.get(sub1)['processes'][0]
@@ -57,12 +104,14 @@ def user_build(product, optimization=None, filter=None):
                     prod1 = prod
                     break
 
+            #  write output string and update Module values
             sideFlow1 = side1 + ts + sub1 + ts + proc1 + ts + prod1
             currentMods['side1'] = SIDES.get(side1)
             currentMods['sub1'] = SUBSTRATES.get(sub1)
             currentMods['proc1'] = PROCESSES.get(proc1)
             currentMods['prod1'] = PRODUCTS.get(prod1)
 
+        # if a second by-product exists, populate sideFlow2
         if side2 != 'NA':
             sub2 = SIDES.get(side2)['substrates'][0]
             proc2 = SUBSTRATES.get(sub2)['processes'][0]
@@ -72,6 +121,7 @@ def user_build(product, optimization=None, filter=None):
                     prod2 = prod
                     break
 
+            #  write output string and update Module values
             sideFlow2 = side2 + ts + sub2 + ts + proc2 + ts + prod2
             currentMods['side2'] = SIDES.get(side2)
             currentMods['sub2'] = SUBSTRATES.get(sub2)
@@ -87,6 +137,34 @@ def user_build(product, optimization=None, filter=None):
 
 
 def user_change(changingMod, newVal, currentMods):
+    """
+    This function takes a specific module to change (see top for modules).
+    This function becomes much more clear after the use of biorefine.py or
+    GUI_biorefine.py.
+
+    The logical flow follows the directional flow described in the documentation
+    for this library. It starts by first checking the product module. If the
+    user has chosen the product as the module they want to change, that code
+    block will activate and change the product to the new value. Then, the
+    program checks the compatibility of the next module, "process", with the
+    new "product" value.
+
+    If the next module is compatible, then the code stops checking other modules
+    and updates all the values that were changed.
+
+    If the next module is not compatible, a new value for that module is
+    selected and the program moves to the next code block. This process repeats
+    along the directional flow of the program until it reaches a compatible
+    module.
+
+    Compatability is even more complicated in this function because we have to
+    check that the new values are compatible with the Bioprocess that existed
+    before the changes. For instance, if the user specifies a new material, the
+    side1 and side2 modules need to both be updated since they depend on the
+    value of the material. If side1 then updates to a new value, this could
+    affect all or none of the following modules, depending on the value of
+    side1.
+    """
     # extract main dicts:
     dicts = call_json()
     PRODUCTS = dicts['PRODUCTS']
@@ -95,13 +173,11 @@ def user_change(changingMod, newVal, currentMods):
     MATERIALS = dicts['MATERIALS']
     SIDES = dicts['SIDES']
 
-    # extract current state of network
-    # these could eventually be made as objects in a Module class
+    # make module dictionaries to determine current state of the Bioprocess
     product = currentMods['product']
     process = currentMods['process']
     substrate = currentMods['substrate']
     material = currentMods['material']
-    # testing for presence of sideFlows
     side1 = currentMods['side1']
     sub1 = currentMods['sub1']
     proc1 = currentMods['proc1']
@@ -436,12 +512,12 @@ def get_avails(module, modules, currentMods):
 """This is a one-time use library for us to develop dictionaries and write
 json files"""
 
-# develop master csv of all strains and their subprods, then use
-# grep and command line filtering, my_utils.py, to get lists
-# of relevant values for each dict.
-
 
 def write_json():
+    """
+    Writes all dictionaries for products, processes, etc. to JSON files so they
+    can be called later on rather than be built from scratch each time.
+    """
     dicts = build_dicts()
     PRODUCTS = dicts['PRODUCTS']
     PROCESSES = dicts['PROCESSES']
@@ -463,6 +539,9 @@ def write_json():
 
 
 def call_json():
+    """
+    Loads json files and organizes them into a dict of dicts
+    """
     dicts = {}
     with open('Jproducts.json') as j:
         PRODUCTS = json.load(j)
@@ -724,7 +803,7 @@ def get_column(file_name,
     return results
 
 
-def track_dates(a, date_column, results):
+def track_dates(a, date_column, results, result_column):
 
     # check that dates are in a readable format
     try:

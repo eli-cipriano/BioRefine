@@ -115,7 +115,7 @@ def main():
         '\nside2  -> sub2  -> proc2  -> prod2\n'\
         '---------------------------------------------------------------------'\
 
-# plot the output and enter the decision loop
+# print the output and enter the decision loop
     os.system('clear')
     brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
@@ -126,50 +126,7 @@ def main():
         brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
         if instruct.lower() == 'help':
-            print('-------------------------------------------------------'
-                  '------------------------')
-            print('EXIT:            EXIT quits with the currently presented'
-                  ' bioprocess.')
-
-            print('\nVIEW [MODULE]:   VIEW shows all the available'
-                  ' options for a specified module.\n'
-                  '                 Modules are the types  of '
-                  ' steps in the bioprocess. \n'
-                  '                 Type "view help" for more details.')
-
-            print('\nCHANGE [MODULE]: CHANGE shows all available options for a'
-                  ' specified module,\n'
-                  '                 which you can then select from and'
-                  ' apply the change to the \n'
-                  '                 current bioprocess.\n'
-                  '                 Type "change help" for more details.\n'
-                  '                 WARNING: This change could impact'
-                  ' other modules in the process.')
-
-            print('\nDETAIL[MODULE]:  DETAIL shows values associated with the'
-                  ' characterization of \n'
-                  '                 that module. This allows you to view'
-                  ' things like process \n'
-                  '                 efficiency, crop density, product value,'
-                  ' etc. for each module \n'
-                  '                 in the current process.\n'
-                  '                 Type "detail help" for more details.')
-
-            print('\nOPTIM [TYPE]:    OPTIM allows you to change the type of'
-                  ' optimization used for \n'
-                  '                 determining the initial bioprocess.\n'
-                  '                 Type "optim help" for more details.')
-
-            print('\nFILT [TYPE]:     FILT allows you to change the type of'
-                  ' filter used for \n'
-                  '                 determining the initial bioprocess.\n'
-                  '                 Type "filt help" for more details.')
-
-            print('\nMAP:             MAP allows you to see the locations of'
-                  ' the Module labels.')
-
-            print('-------------------------------------------------------'
-                  '------------------------')
+            print_help()
 
         elif instruct.lower().strip() == 'exit':
             # quit the UI loop and create output file
@@ -223,44 +180,8 @@ def main():
                 print('-------------------------------------------------------'
                       '------------------------')
                 avails = brf.get_avails(mod, modules, currentMods)  # list
-                while True:
-                    # keep user in input mode until valid input received
-                    for a in avails:
-                        if a != 'NA':
-                            print(a)
-                    print('----------------------------------------------------'
-                          '---------------------------')
-                    newVal = input('\nEnter new value from above:'
-                                   '\n\ncmd: ').strip(' ').lower()
-
-                    # check if user is trying to delete a sideFlow
-                    removeSide = mod[0:4] == 'side' and newVal == 'none'
-
-                    if newVal in avails or removeSide:
-                        # valid input, proceed with user_change
-                        print('\nCHANGED: {} to {}'
-                              .format(mod.upper(),
-                                      newVal.upper()))
-
-                        output = brf.user_change(mod, newVal, currentMods)
-                        currentMods = output[1]
-                        mainFlow = output[0][0]
-                        sideFlow1 = output[0][1]
-                        sideFlow2 = output[0][2]
-                        os.system('clear')
-                        brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
-                        break
-
-                    elif newVal == '':
-                        # empy input, return to home
-                        os.system('clear')
-                        brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
-                        break
-                    else:
-                        # invalid entry, try again
-                        os.system('clear')
-                        print('Invalid entry: Please try again.')
-                        brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+                flows = [mainFlow, sideFlow1, sideFlow2]
+                get_change(avails, mod, currentMods, flows)
 
         elif instruct.lower()[0:6] == 'detail':
             # display properties of the specified Module
@@ -277,38 +198,100 @@ def main():
                 print('-------------------------------------------------------'
                       '------------------------')
                 detailMod = currentMods[mod]
-                for key, val in detailMod.items():
-                    if key == 'subprods':
-                        # list strain options line by line
-                        if mod == 'process':
-                            prod = currentMods['product']['name']
-                            sub = currentMods['substrate']['name']
-                        elif mod == 'proc1':
-                            prod = currentMods['prod1']['name']
-                            sub = currentMods['sub1']['name']
-                        elif mod == 'proc2':
-                            prod = currentMods['prod2']['name']
-                            sub = currentMods['sub2']['name']
-                        key = '2'.join([sub, prod])
-                        val = val[key]['strains']
-                        print('\n', key+': ')
-                        for strain in val:
-                            print('\n       ', strain)
-
-                    elif key == 'treatments':
-                        # list treatment options line by line
-                        pass
-
-                    else:
-                        # print field of detailMod
-                        print(key+': {}'.format(val))
+                print_details()
 
         elif instruct.lower() == 'map':
             # display properties of the specified Module
             print(modLayout)
 
 
+##############################sub functions#####################################
+
+
+def get_change(avails, mod, currentMods, flows):
+    """
+    sub function for receiving input from user on which new value they want
+    to apply to the bioprocess.
+    """
+    mainFlow = flows[0]
+    sideFlow1 = flows[1]
+    sideFlow2 = flows[2]
+    while True:
+        # keep user in input mode until valid input received
+        for a in avails:
+            if a != 'NA':
+                print(a)
+        print('----------------------------------------------------'
+              '---------------------------')
+        newVal = input('\nEnter new value from above:'
+                       '\n\ncmd: ').strip(' ').lower()
+
+        # check if user is trying to delete a sideFlow
+        removeSide = mod[0:4] == 'side' and newVal == 'none'
+
+        if newVal in avails or removeSide:
+            # valid input, proceed with user_change
+            print('\nCHANGED: {} to {}'
+                  .format(mod.upper(),
+                          newVal.upper()))
+
+            output = brf.user_change(mod, newVal, currentMods)
+            currentMods = output[1]
+            mainFlow = output[0][0]
+            sideFlow1 = output[0][1]
+            sideFlow2 = output[0][2]
+            os.system('clear')
+            brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+            break
+
+        elif newVal == '':
+            # empy input, return to home
+            os.system('clear')
+            brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+            break
+        else:
+            # invalid entry, try again
+            os.system('clear')
+            print('Invalid entry: Please try again.')
+            brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+
+
+def print_details(detailMod, currentMods):
+    """
+    sub function for receiving input from user on which module they would like
+    to view detailed properties of.
+    """
+    for key, val in detailMod.items():
+        if key == 'subprods':
+            # list strain options line by line
+            if mod == 'process':
+                prod = currentMods['product']['name']
+                sub = currentMods['substrate']['name']
+            elif mod == 'proc1':
+                prod = currentMods['prod1']['name']
+                sub = currentMods['sub1']['name']
+            elif mod == 'proc2':
+                prod = currentMods['prod2']['name']
+                sub = currentMods['sub2']['name']
+            key = '2'.join([sub, prod])
+            val = val[key]['strains']
+            print('\n' + key+': ')
+            for strain in val:
+                print('\n       ', strain)
+
+        elif key == 'treatments':
+            # list treatment options line by line
+            pass
+
+        else:
+            # print field of detailMod
+            print(key+': {}'.format(val))
+
+
 def read_input(instruct, modules):
+    """
+    sub function for interpreting user command
+    """
     # cmd = input, modules = list of Module labels (12)
     cmd = instruct.lower().split(' ')  # list of terms entered by user
 
@@ -319,6 +302,56 @@ def read_input(instruct, modules):
         cmd[1] = 'help'
     mod = cmd[1]
     return mod
+
+
+def print_help():
+    """
+    sub function for printing help documentation
+    """
+    print('-------------------------------------------------------'
+          '------------------------')
+    print('EXIT:            EXIT quits with the currently presented'
+          ' bioprocess.')
+
+    print('\nVIEW [MODULE]:   VIEW shows all the available'
+          ' options for a specified module.\n'
+          '                 Modules are the types  of '
+          ' steps in the bioprocess. \n'
+          '                 Type "view help" for more details.')
+
+    print('\nCHANGE [MODULE]: CHANGE shows all available options for a'
+          ' specified module,\n'
+          '                 which you can then select from and'
+          ' apply the change to the \n'
+          '                 current bioprocess.\n'
+          '                 Type "change help" for more details.\n'
+          '                 WARNING: This change could impact'
+          ' other modules in the process.')
+
+    print('\nDETAIL[MODULE]:  DETAIL shows values associated with the'
+          ' characterization of \n'
+          '                 that module. This allows you to view'
+          ' things like process \n'
+          '                 efficiency, crop density, product value,'
+          ' etc. for each module \n'
+          '                 in the current process.\n'
+          '                 Type "detail help" for more details.')
+
+    print('\nOPTIM [TYPE]:    OPTIM allows you to change the type of'
+          ' optimization used for \n'
+          '                 determining the initial bioprocess.\n'
+          '                 Type "optim help" for more details.')
+
+    print('\nFILT [TYPE]:     FILT allows you to change the type of'
+          ' filter used for \n'
+          '                 determining the initial bioprocess.\n'
+          '                 Type "filt help" for more details.')
+
+    print('\nMAP:             MAP allows you to see the locations of'
+          ' the Module labels.')
+
+    print('-------------------------------------------------------'
+          '------------------------')
 
 
 if __name__ == '__main__':
