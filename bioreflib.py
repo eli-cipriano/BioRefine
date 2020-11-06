@@ -509,8 +509,11 @@ def get_avails(module, modules, currentMods):
 ###############################################################################
 ###############################################################################
 
-"""This is a one-time use library for us to develop dictionaries and write
-json files"""
+"""
+This is a library for us to develop dictionaries and write
+json files. It's only used when we want to update the database that the first
+part of bioreflib relies on.
+"""
 
 
 def write_json():
@@ -562,6 +565,12 @@ def call_json():
 
 
 def build_dicts():
+    """
+    Calls build functions to create dictionaries from CSV's. The plan for these
+    build functions is to eventually change them to a sorted list rather than
+    dictionaries, but this will only reduce the size of the databases and won't
+    change the functionality of the program.
+    """
     dicts = {}
     PRODUCTS = build_products()
     PROCESSES = build_processes()
@@ -576,9 +585,15 @@ def build_dicts():
 
 
 def build_products():
+    """
+    Library of possible bio-products
+    """
     products = {}
+    # make a list of unique products
     prodList = get_column('data_sub2prod.csv', result_column=3)
     prodList = sorted(list(set(prodList)))
+
+    # extract information for each product
     for prod in prodList:
         processes = []
         results = get_column('data_sub2prod.csv', result_column=0,
@@ -593,16 +608,22 @@ def build_products():
 
 
 def build_processes():
+    """
+    Library of possible biochemical processes
+    """
     processes = {}
+    # make a list of unique processes
     processList = get_column('data_sub2prod.csv', result_column=0)
     processList = sorted(list(set(processList)))
 
+    # extract information for each process
     for proc in processList:
         results = get_column('data_sub2prod.csv',
                              result_column=[2, 3],
                              query_column=0,
                              query_value=proc)
 
+        # make inner dictionary for specific substrate conversions
         subprods = build_subprods(results)
         substrates = []
         products = []
@@ -619,14 +640,20 @@ def build_processes():
 
 
 def build_subprods(results):
+    """
+    Library of possible substrate conversions
+    """
     subprods = {}
+    # make a list of unique conversions
     pairs = []
     for r in results:
         pairs.append('2'.join([r[0], r[1]]))
 
+    # get information for each conversion
     for pair in sorted(list(set(pairs))):
         substrate, product = pair.split('2')
 
+        # pass in 2 queries so that both values have to be true
         strains = get_column('data_sub2prod.csv', result_column=[1, 4, 5, 6],
                              query_column=[2, 3], query_value=pair.split('2'))
         subprods[pair] = {'substrate': substrate,
@@ -636,21 +663,29 @@ def build_subprods(results):
 
 
 def build_substrates():
+    """
+    Library of possible substrates
+    """
     substrates = {}
+    # make a list of unique substrates
     subList = get_column('data_sub2prod.csv', result_column=2)
     subList = sorted(list(set(subList)))
     for sub in subList:
-        processes = []
+        # get a list of unique processes
         results = get_column('data_sub2prod.csv', result_column=0,
                              query_column=2, query_value=sub)
+        processes = []
         for r in sorted(list(set(results))):
             processes.append(r)
 
-        materials = []
+        # pass in 3 queries so that only one value has to be true
+        # checking material, side1, side2 columns to
+        # make a list of unique materials.
         results = get_column('data_mat2sub.csv', result_column=0,
                              query_column=[1, 2, 3],
                              query_value=[sub, sub, sub],
                              searchOr=True)
+        materials = []
         for r in sorted(list(set(results))):
             materials.append(r)
 
@@ -662,6 +697,11 @@ def build_substrates():
 
 
 def build_materials():
+    """
+    Library of possible materials:
+    This is our first attempt before we started using get_column. Just realized
+    I never went back and updated it, but this works for now.
+    """
     materials = {}
     with open('data_mat2sub.csv', 'r') as f:
         header = f.readline()
@@ -691,9 +731,11 @@ def build_materials():
 
 def build_sides():
     sides = {}
+    # make list of unique side materials
     sidesList = get_column('data_side2sub.csv', result_column=0)
     sidesList = sorted(list(set(sidesList)))
 
+    # extract information for each side material
     for side in sidesList:
         results = get_column('data_side2sub.csv', result_column=[1, 2, 3, 4],
                              query_column=0, query_value=side)
@@ -730,6 +772,10 @@ def get_column(file_name,
     Returns:
     --------
     results: a list of data-val paired items.
+
+    * We may consider adding the my_utils.py library if linear/binary searching
+    becomes necessary, but for now we just copied the get_columns code in. We
+    could also link the code as a git submodule.
     """
     # convert list to int if only single column requested
     if type(result_column) == list and len(result_column) <= 1:
@@ -804,7 +850,9 @@ def get_column(file_name,
 
 
 def track_dates(a, date_column, results, result_column):
-
+    """
+    Used exclusively by get_column
+    """
     # check that dates are in a readable format
     try:
         year, month, day = a[date_column].split('-')
@@ -848,6 +896,9 @@ def track_dates(a, date_column, results, result_column):
 
 
 def append_results(a, results, result_column):
+    """
+    Used exclusively by get_column
+    """
     if type(result_column) == int:
         value = a[result_column]
         # convert to ints if possible
