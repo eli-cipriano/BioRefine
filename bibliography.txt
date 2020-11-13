@@ -1,0 +1,40 @@
+Adu, C., Jolly, M., & Thakur, V. K. (2018). Exploring new horizons for paper recycling: A review of biomaterials and biorefinery feedstocks derived from wastepaper. In Current Opinion in Green and Sustainable Chemistry. https://doi.org/10.1016/j.cogsc.2018.03.003
+
+Apel, A. R., D’Espaux, L., Wehrs, M., Sachs, D., Li, R. A., Tong, G. J., Garber, M., Nnadi, O., Zhuang, W., Hillson, N. J., Keasling, J. D., & Mukhopadhyay, A. (2017). A Cas9-based toolkit to program gene expression in Saccharomyces cerevisiae. Nucleic Acids Research, 45(1), 496–508. https://doi.org/10.1093/nar/gkw1023
+
+Chen, Z., Huang, J., Wu, Y., Wu, W., Zhang, Y., & Liu, D. (2017). Metabolic engineering of Corynebacterium glutamicum for the production of 3-hydroxypropionic acid from glucose and xylose. Metabolic Engineering. https://doi.org/10.1016/j.ymben.2016.11.009
+
+Deng, Y., & Fong, S. S. (2011). Metabolic engineering of Thermobifida fusca for direct aerobic bioconversion of untreated lignocellulosic biomass to 1-propanol. Metabolic Engineering. https://doi.org/10.1016/j.ymben.2011.06.007
+
+D’Espaux, L., Ghosh, A., Runguphan, W., Wehrs, M., Xu, F., Konzock, O., Dev, I., Nhan, M., Gin, J., Reider Apel, A., Petzold, C. J., Singh, S., Simmons, B. A., Mukhopadhyay, A., García Martín, H., & Keasling, J. D. (2017). Engineering high-level production of fatty alcohols by Saccharomyces cerevisiae from lignocellulosic feedstocks. Metabolic Engineering, 42(April), 115–125. https://doi.org/10.1016/j.ymben.2017.06.004
+
+Frederix, M., Mingardon, F., Hu, M., Sun, N., Pray, T., Singh, S., Simmons, B. A., Keasling, J. D., & Mukhopadhyay, A. (2016). Development of an: E. coli strain for one-pot biofuel production from ionic liquid pretreated cellulose and switchgrass. Green Chemistry. https://doi.org/10.1039/c6gc00642f
+
+Gerstmeir, R., Wendisch, V. F., Schnicke, S., Ruan, H., Farwick, M., Reinscheid, D., & Eikmanns, B. J. (2003). Acetate metabolism and its regulation in Corynebacterium glutamicum. Journal of Biotechnology. https://doi.org/10.1016/S0168-1656(03)00167-6
+
+Guo, D., Kong, S., Zhang, L., Pan, H., Wang, C., & Liu, Z. (2018). Biosynthesis of advanced biofuel farnesyl acetate using engineered Escherichia coli. Bioresource Technology. https://doi.org/10.1016/j.biortech.2018.08.112
+
+Ha, S. J., Galazka, J. M., Kim, S. R., Choi, J. H., Yang, X., Seo, J. H., Glass, N. L., Cate, J. H. D., & Jin, Y. S. (2011). Engineered Saccharomyces cerevisiae capable of simultaneous cellobiose and xylose fermentation. Proceedings of the National Academy of Sciences of the United States of America. https://doi.org/10.1073/pnas.1010456108
+
+Jia, M., Potter, K. C., & Peters, R. J. (2017). Extreme promiscuity of a bacterial and a plant diterpene synthase enables combinatorial biosynthesis. Metabolic Engineering, 176(5), 139–148. https://doi.org/10.1016/j.physbeh.2017.03.040
+
+Jojima, T., Noburyu, R., Sasaki, M., Tajima, T., Suda, M., Yukawa, H., & Inui, M. (2015). Metabolic engineering for improved production of ethanol by Corynebacterium glutamicum. Applied Microbiology and Biotechnology. https://doi.org/10.1007/s00253-014-6223-4
+
+Mills, T. Y., Sandoval, N. R., & Gill, R. T. (2009). Cellulosic hydrolysate toxicity and tolerance mechanisms in Escherichia coli. In Biotechnology for Biofuels. https://doi.org/10.1186/1754-6834-2-26
+
+Minty, J. J., Singer, M. E., Scholz, S. A., Bae, C. H., Ahn, J. H., Foster, C. E., Liao, J. C., & Lin, X. N. (2013). Design and characterization of synthetic fungal-bacterial consortia for direct production of isobutanol from cellulosic biomass. Proceedings of the National Academy of Sciences of the United States of America. https://doi.org/10.1073/pnas.1218447110
+
+Sakai, S., Tsuchida, Y., Okino, S., Ichihashi, O., Kawaguchi, H., Watanabe, T., Inui, M., & Yukawa, H. (2007). Effect of lignocellulose-derived inhibitors on growth of and ethanol production by growth-arrested Corynebacterium glutamicum R. Applied and Environmental Microbiology. https://doi.org/10.1128/AEM.02880-06
+
+Shen, C. R., & Liao, J. C. (2008). Metabolic engineering of Escherichia coli for 1-butanol and 1-propanol production via the keto-acid pathways. Metabolic Engineering. https://doi.org/10.1016/j.ymben.2008.08.001
+
+Siebert, D., & Wendisch, V. F. (2015). Metabolic pathway engineering for production of 1,2-propanediol and 1-propanol by Corynebacterium glutamicum. Biotechnology for Biofuels. https://doi.org/10.1186/s13068-015-0269-0
+
+Smith, K. M., Cho, K. M., & Liao, J. C. (2010). Engineering Corynebacterium glutamicum for isobutanol production. Applied Microbiology and Biotechnology. https://doi.org/10.1007/s00253-010-2522-6
+
+Tashiro, Y., Desai, S. H., & Atsumi, S. (2015). Two-dimensional isobutyl acetate production pathways to improve carbon yield. Nature Communications, 6(May), 1–9. https://doi.org/10.1038/ncomms8488
+
+Trinh, C. T., & Srienc, F. (2009). Metabolic engineering of Escherichia coli for efficient conversion of glycerol to ethanol. Applied and Environmental Microbiology. https://doi.org/10.1128/AEM.00670-09
+
+Zhang, C., Xue, Q., Hou, J., Mohsin, A., Zhang, M., Guo, M., Zhu, Y., Bao, J., Wang, J., Xiao, W., & Cao, L. (2019). In-Depth Two-Stage Transcriptional Reprogramming and Evolutionary Engineering of Saccharomyces cerevisiae for Efficient Bioethanol Production from Xylose with Acetate. Journal of Agricultural and Food Chemistry. https://doi.org/10.1021/acs.jafc.9b05095
+ 
