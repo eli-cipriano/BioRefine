@@ -6,6 +6,10 @@ import bioreflib as brf
 This code can be run in a pysimple trinket.io
 See: https://pysimplegui.trinket.io/demo-programs#/demo-programs/the-basic-pysimplegui-program
 
+SAVING YOUR BIOPROCESS:
+When saving, your output file will be written as a json, whether you
+include a file extension or not.
+
 brf functions used:
  - user_change
      this allows user to input variables and altering the map to
@@ -20,7 +24,7 @@ brf functions used:
 """
 
 
-def make_layout(modValues, header=''):
+def make_layout(modValues, modules, header=''):
     """
     formats a PySimpleGUI window to be input into PySimple's Window method.
 
@@ -83,14 +87,14 @@ def make_layout(modValues, header=''):
 
     tab2_layout = [[sg.T('Get Details')],
 
-                   [sg.Text('See details for:', key='changeDetails')],
+                   [sg.Text('See details for:')],
 
-                   [sg.Combo(values=['Coming Soon :)'],
-                             key='changeOptionsDetail', size=(20, 1)),
-                    sg.Button('Enter')], ]
+                   [sg.Combo(values=modules,
+                             key='detailOptions', size=(20, 1)),
+                    sg.Button('Enter', key='Detail Chosen')], ]
 
-    layout = [[sg.TabGroup([[sg.Tab('Tab 1', tab1_layout),
-                             sg.Tab('Tab 2', tab2_layout)]])]]
+    layout = [[sg.TabGroup([[sg.Tab('Bioprocess', tab1_layout),
+                             sg.Tab('Details', tab2_layout)]])]]
 
     return layout
 
@@ -113,6 +117,7 @@ def callback_UserChange(changingMod, avails, currentMods, window):
     -------------
 
     """
+
     title = 'Change {}:'.format(changingMod)
     window['changeMod'].update(title)
     # add clear option for sideFlows
@@ -144,13 +149,14 @@ def callback_ApplyChange(window, newVal):
     window['changeMod'].update('Change ___:')
     window['changeOptions'].update(values=[''])
     window['changeOptions'].update(value='')
-    #clearwindow['header'].update('Changed to {}...'.format(newVal))
+    # clearwindow['header'].update('Changed to {}...'.format(newVal))
     return newVal  # where does newVal go?
 
 
 def callback_UpdateMap(cm, modules, window):
     for mod in modules:
-      # What does boost do? #
+      # Boost is not implemented yet, just a potential way to link different
+      # bioprocesses together via sideFlows
         if mod[0:5] != 'boost':
             # Updates a mod of the window . . .
             window[mod].update(cm[mod]['name'])
@@ -158,29 +164,89 @@ def callback_UpdateMap(cm, modules, window):
 
 def callback_Save():
     fileName = sg.popup_get_text('Save Bioprocess As:', 'File Saver')
+    print(fileName)
     if fileName:
         fileName = fileName.strip(' ')
         if 'json' not in fileName.split('.'):
             fileName = ''.join([fileName, '.json'])
-    else:
+    elif fileName is None:
+        fileName = 'cancel'
+    elif fileName == '':
         fileName = 'exit'
     return fileName
 
 
-def main(cm, modules, output, changingMod=None):
+def callback_Details(detailMod, mod, currentMods):
+    """
+    sub function for receiving input from user on which module they would like
+    to view detailed properties of.
+    """
+    detailText = print_Details(detailMod, mod, currentMods)
+    detailPopup = sg.popup(detailText)
+
+
+def print_Details(detailMod, mod, currentMods):
+    detailText = ''
+    for key, val in detailMod.items():
+        if key == 'subprods':
+            # list strain options line by line
+            if mod == 'process':
+                prod = currentMods['product']['name']
+                sub = currentMods['substrate']['name']
+            elif mod == 'proc1':
+                prod = currentMods['prod1']['name']
+                sub = currentMods['sub1']['name']
+            elif mod == 'proc2':
+                prod = currentMods['prod2']['name']
+                sub = currentMods['sub2']['name']
+            key = '2'.join([sub, prod])
+            strains = val[key]['strains']
+            detailText += '\n{}: '.format(key)
+            for strain in strains:
+                detailText += '\n       {}'.format(strain)
+
+        elif key == 'treatments':
+            # list treatment options line by line
+            pass
+
+        else:
+            # print field of detailMod
+            detailText += '{}: {}\n'.format(key, val)
+
+    return detailText
+
+
+def main():
+    # initialize the bioprocess with default values
+    output = brf.user_build('ethanol',
+                            optimization=None,
+                            filter=None
+                            )
+    cm = output[1]
+    # make a list of all the module names
+    modules = ['product', 'process', 'substrate', 'material',
+               'side1', 'sub1', 'proc1', 'prod1', 'boost1',
+               'side2', 'sub2', 'proc2', 'prod2', 'boost2']
+    # store current module values for updating button names
     modValues = {}
+    # to begin, no module is specified for change
+    changingMod = None
+
     for mod in modules:
         if mod[0:5] != 'boost':
-          # Here's this line again. What does it do? #
+            # Here's this line again. What does it do?
             modValues[mod] = cm[mod]['name']
 
-    window = sg.Window('Your Current Bioprocess', make_layout(modValues))
+    window = sg.Window('Your Current Bioprocess', make_layout(modValues, modules))
 
-    while True:             # Event Loop
+    while True:  # Event Loop
         event, values = window.read()
-
-        # check that conditions are met for applying changes
-        canApply = changingMod is not None and values['changeOptions'] != ''
+        try:
+            # check that conditions are met for input actions
+            canApply = changingMod is not None and values['changeOptions'] != ''
+            canDetail = values['detailOptions'] != ''
+        except:
+            pass
 
         if event == sg.WIN_CLOSED:
             break
@@ -199,25 +265,26 @@ def main(cm, modules, output, changingMod=None):
                 avails = brf.get_avails(changingMod, modules, cm)
                 callback_UserChange(changingMod, avails, cm, window)
 
+        elif event == 'Detail Chosen' and canDetail:
+            mod = values['detailOptions']
+            detailMod = cm[mod]
+            callback_Details(detailMod, mod, cm)
+
         elif event == 'exit':
             fileName = callback_Save()
-            window.close()
-            if fileName != 'exit':
+            if fileName == 'cancel':
+                pass
+            elif fileName == 'exit':
+                window.close()
+                break
+            else:
+                window.close()
                 brf.print_bioprocess(output[0][0], output[0][1], output[0][2])
                 brf.write_bioprocess(cm, fileName)
-            break
+                break
 
 
 if __name__ == '__main__':
 
     # brf.write_json()
-    output = brf.user_build('ethanol',
-                            optimization=None,
-                            filter=None
-                            )
-    currentMods = output[1]
-    modules = ['product', 'process', 'substrate', 'material',
-               'side1', 'sub1', 'proc1', 'prod1', 'boost1',
-               'side2', 'sub2', 'proc2', 'prod2', 'boost2']
-
-    main(currentMods, modules, output)
+    main()
