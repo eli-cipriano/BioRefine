@@ -262,32 +262,23 @@ def user_change(changingMod, newVal, currentMods):
         proc1 = PROCESSES.get(newVal)
         currentMods['proc1'] = proc1
         # if new proc1 fits with current product, we're done!
-        key = '2'.join([sub1['name'], prod1['name']])
-        subprod = proc1['subprods'].get(key)
-        if subprod is None:
-            for key, val in proc1['subprods'].items():
-                sub, prod = key.split('2')
-                if sub == sub1['name']:
-                    changingMod = 'prod1'
-                    newVal = prod
+        changingMod, newVal = check_prods(currentMods,
+                                          changingMod,
+                                          newVal,
+                                          floNum=1
+                                          )
 
     if changingMod == 'prod1':
         # change prod1 to new newVal
         if newVal:
             prod1 = PRODUCTS.get(newVal)
             currentMods['prod1'] = prod1
-        materialDict = MATERIALS.get(currentMods['material']['name'])
+        # materialDict = MATERIALS.get(currentMods['material']['name'])
         # if new material fits with current side2, we're done!
-        if side2['name'] not in materialDict['sides']:
-            sides = materialDict['sides']
-            substrate = currentMods['substrate']['name']
-            for side in sides:
-                if side not in ['', 'NA', substrate, side1['name']]:
-                    changingMod = 'side2'
-                    newVal = side
-
-            if changingMod != 'side2':
-                currentMods = replace_sideFlow('side2', currentMods)
+        changingMod, newVal = check_side2(currentMods,
+                                          changingMod,
+                                          newVal
+                                          )
 
     if changingMod == 'side2':
         if newVal == 'none':
@@ -296,48 +287,35 @@ def user_change(changingMod, newVal, currentMods):
             # # change side2 to new newVal
             side2 = SIDES.get(newVal)
             currentMods['side2'] = side2
-            # if new side2 fits with current sub2, we're done!
-
-            if sub2['name'] not in side2['substrates']:
-                changingMod = 'sub2'
-                newVal = side2['substrates'][0]
+            # if new side1 fits with current sub1, we're done!
+            changingMod, newVal = check_subs(currentMods,
+                                             changingMod,
+                                             newVal,
+                                             floNum=2
+                                             )
 
     if changingMod == 'sub2':
         # change sub2 to new newVal
         sub2 = SUBSTRATES.get(newVal)
         currentMods['sub2'] = sub2
         # if new sub2 fits with current proc2 and prod2, we're done!
-        if proc2['name'] != '':
-            key = '2'.join([sub2['name'], prod2['name']])
-            proc2 = PROCESSES.get(proc2['name'])
-            subprod = proc2['subprods'].get(key)
-            if subprod is None:
-                for key, val in proc2['subprods'].items():
-                    sub, prod = key.split('2')
-                    if sub == sub2['name']:
-                        changingMod = 'prod2'
-                        newVal = prod
-
-                if changingMod == 'sub2':
-                    changingMod = 'proc2'
-                    newVal = sub2['processes'][0]
-        else:
-            changingMod = 'proc2'
-            newVal = sub2['processes'][0]
+        changingMod, newVal = check_procs(currentMods,
+                                          changingMod,
+                                          newVal,
+                                          PROCESSES,
+                                          floNum=1
+                                          )
 
     if changingMod == 'proc2':
         # change proc2 to new newVal
         proc2 = PROCESSES.get(newVal)
         currentMods['proc2'] = proc2
         # if new proc2 fits with current product, we're done!
-        key = '2'.join([sub2['name'], prod2['name']])
-        subprod = proc2['subprods'].get(key)
-        if subprod is None:
-            for key, val in proc2['subprods'].items():
-                sub, prod = key.split('2')
-                if sub == sub2['name']:
-                    changingMod = 'prod2'
-                    newVal = prod
+        changingMod, newVal = check_prods(currentMods,
+                                          changingMod,
+                                          newVal,
+                                          floNum=1
+                                          )
 
     if changingMod == 'prod2':
         # change proc2 to new newVal
@@ -347,33 +325,10 @@ def user_change(changingMod, newVal, currentMods):
         # increase amount of side material,
         # i.e switchgrass, algae, food waste, etc.
 
-    # reassemble bioprocess
-    ts = ' -> '  # transition string
-    product = currentMods['product']['name']
-    process = currentMods['process']['name']
-    substrate = currentMods['substrate']['name']
-    material = currentMods['material']['name']
+    # assemble bioprocess into string-pattern
+    flows = assemble_flows(currentMods)
 
-    mainFlow = material + ts + substrate + ts + process + ts + product
-
-    side1 = currentMods['side1']['name']
-    sub1 = currentMods['sub1']['name']
-    proc1 = currentMods['proc1']['name']
-    prod1 = currentMods['prod1']['name']
-    # boost1 = currentMods.get('boost1').get('name')
-    side2 = currentMods['side2']['name']
-    sub2 = currentMods['sub2']['name']
-    proc2 = currentMods['proc2']['name']
-    prod2 = currentMods['prod2']['name']
-    # boost2 = currentMods.get('boost2').get('name')
-
-    sideFlow1, sideFlow2 = '', ''
-    if side1 != '':
-        sideFlow1 = side1 + ts + sub1 + ts + proc1 + ts + prod1
-    if side2 != '':
-        sideFlow2 = side2 + ts + sub2 + ts + proc2 + ts + prod2
-
-    return [[mainFlow, sideFlow1, sideFlow2], currentMods]
+    return [flows, currentMods]
 
 
 ######################## "CHECK" Helper Functions ##############################
@@ -507,6 +462,7 @@ def check_procs(currentMods,
                 PROCESSES,
                 floNum=1
                 ):
+
     # get keys for whichever sideFlow is being looked at
     procKey = 'proc{}'.format(floNum)
     subKey = 'sub{}'.format(floNum)
@@ -535,6 +491,59 @@ def check_procs(currentMods,
         newVal = sub['processes'][0]
 
     return changingMod, newVal
+
+
+def check_prods(currentMods,
+                changingMod,
+                newVal,
+                floNum=1
+                ):
+
+    # get keys for whichever sideFlow is being looked at
+    procKey = 'proc{}'.format(floNum)
+    subKey = 'sub{}'.format(floNum)
+    prodKey = 'prod{}'.format(floNum)
+    # call specific Modular Unit Values
+    proc = currentMods[procKey]
+    sub = currentMods[subKey]
+    prod = currentMods[prodKey]
+    # compare compatability with current process
+    key = '2'.join([sub['name'], prod['name']])
+    subprod = proc['subprods'].get(key)
+    if subprod is None:
+        for key, val in proc1['subprods'].items():
+            s, p = key.split('2')
+            if s == sub['name']:
+                changingMod = prodKey
+                newVal = p
+
+    return changingMod, newVal
+
+
+def check_side2(currentMods,
+                changingMod,
+                newVal,
+                ):
+    # call
+    side2 = currentMods['side2']
+    side1 = currentMods['side1']
+    material = currentMods['material']
+    substrate = currentMods['substrate']
+
+    if side2['name'] not in material['sides']:
+        sides = material['sides']
+        substrate = currentMods['substrate']['name']
+        for side in sides:
+            if side not in ['', 'NA', substrate['name'], side1['name']]:
+                changingMod = 'side2'
+                newVal = side
+
+        if changingMod != 'side2':
+            currentMods = replace_sideFlow('side2', currentMods)
+
+    return changingMod, newVal
+
+
 ############################## Helper Functions ################################
 
 
@@ -553,6 +562,35 @@ def replace_sideFlow(side, currentMods):
         currentMods['prod2'] = {'name': ''}
         currentMods['boost2'] = {'name': ''}
     return currentMods
+
+
+def assemble_flows(currentMods):
+    ts = ' -> '  # transition string
+    product = currentMods['product']['name']
+    process = currentMods['process']['name']
+    substrate = currentMods['substrate']['name']
+    material = currentMods['material']['name']
+
+    mainFlow = material + ts + substrate + ts + process + ts + product
+
+    side1 = currentMods['side1']['name']
+    sub1 = currentMods['sub1']['name']
+    proc1 = currentMods['proc1']['name']
+    prod1 = currentMods['prod1']['name']
+    # boost1 = currentMods.get('boost1').get('name')
+    side2 = currentMods['side2']['name']
+    sub2 = currentMods['sub2']['name']
+    proc2 = currentMods['proc2']['name']
+    prod2 = currentMods['prod2']['name']
+    # boost2 = currentMods.get('boost2').get('name')
+
+    sideFlow1, sideFlow2 = '', ''
+    if side1 != '':
+        sideFlow1 = side1 + ts + sub1 + ts + proc1 + ts + prod1
+    if side2 != '':
+        sideFlow2 = side2 + ts + sub2 + ts + proc2 + ts + prod2
+
+    return [mainFlow, sideFlow1, sideFlow2]
 
 
 def print_bioprocess(mainFlow, sideFlow1, sideFlow2):
