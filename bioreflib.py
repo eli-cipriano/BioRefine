@@ -65,7 +65,6 @@ def user_build(product, optimization=None, filter=None):
     MATERIALS = dicts['MATERIALS']  # dictionary of all known materials
     SIDES = dicts['SIDES']  # dictionary of all known side materials
 
-    ts = ' -> '  # transition string
     currentMods['product'] = PRODUCTS.get(product)  # update product
     if optimization is None and filter is None:
         # no opt or filt specified, choose first available Modular Unit value
@@ -77,8 +76,6 @@ def user_build(product, optimization=None, filter=None):
                 break
         material = SUBSTRATES.get(substrate)['materials'][0]
 
-        #  write output string and update Modular Unit values
-        mainFlow = material + ts + substrate + ts + process + ts + product
         currentMods['process'] = PROCESSES.get(process)
         currentMods['substrate'] = SUBSTRATES.get(substrate)
         currentMods['material'] = MATERIALS.get(material)
@@ -92,7 +89,6 @@ def user_build(product, optimization=None, filter=None):
             side2 = MATERIALS.get(material)['sides'][1]
         except(IndexError):
             side2 = 'NA'
-        sideFlow1, sideFlow2 = '', ''
 
         # if a by-product exists from the chosen material, populate sideFlow1
         if side1 != 'NA':
@@ -104,8 +100,6 @@ def user_build(product, optimization=None, filter=None):
                     prod1 = prod
                     break
 
-            #  write output string and update Modular Unit values
-            sideFlow1 = side1 + ts + sub1 + ts + proc1 + ts + prod1
             currentMods['side1'] = SIDES.get(side1)
             currentMods['sub1'] = SUBSTRATES.get(sub1)
             currentMods['proc1'] = PROCESSES.get(proc1)
@@ -121,13 +115,12 @@ def user_build(product, optimization=None, filter=None):
                     prod2 = prod
                     break
 
-            #  write output string and update Modular Unit values
-            sideFlow2 = side2 + ts + sub2 + ts + proc2 + ts + prod2
             currentMods['side2'] = SIDES.get(side2)
             currentMods['sub2'] = SUBSTRATES.get(sub2)
             currentMods['proc2'] = PROCESSES.get(proc2)
             currentMods['prod2'] = PRODUCTS.get(prod2)
 
+        flows = assemble_flows(currentMods)
     else:
         # filter available Modular Unit values and optimize decision making
         print('Optimization and Filtering options coming soon!')
@@ -189,12 +182,14 @@ def user_change(changingMod, newVal, currentMods):
     prod2 = currentMods['prod2']
     boost2 = currentMods['boost2']
 
-    # begin process of updating Modular Unit values based on initial input
+    # begin updating Modular Unit values based on user input
+
     if changingMod == 'product':
         # change process to new newVal
         product = PRODUCTS.get(newVal)
         currentMods['product'] = product
         # if new substrate fits with current material, we're done!
+        # Otherwise, changingMod will be 'process'
         changingMod, newVal = check_process(currentMods,
                                             changingMod,
                                             newVal,
@@ -206,6 +201,7 @@ def user_change(changingMod, newVal, currentMods):
         process = PROCESSES.get(newVal)
         currentMods['process'] = process
         # if new process fits with current substrate, we're done!
+        # Otherwise, changingMod will be 'substrate'
         changingMod, newVal = check_substrate(currentMods,
                                               changingMod,
                                               newVal
@@ -216,6 +212,7 @@ def user_change(changingMod, newVal, currentMods):
         substrate = SUBSTRATES.get(newVal)
         currentMods['substrate'] = substrate
         # if new substrate fits with current material, we're done!
+        # Otherwise, changingMod will be 'material'
         changingMod, newVal = check_material(currentMods,
                                              changingMod,
                                              newVal
@@ -226,6 +223,7 @@ def user_change(changingMod, newVal, currentMods):
         material = MATERIALS.get(newVal)
         currentMods['material'] = material
         # if new material fits with current side1 and side2, we're done!
+        # Otherwise, changingMod will be 'side1/2'
         changingMod, newVal = check_sides(currentMods,
                                           changingMod,
                                           newVal
@@ -239,6 +237,7 @@ def user_change(changingMod, newVal, currentMods):
             side1 = SIDES.get(newVal)
             currentMods['side1'] = side1
             # if new side1 fits with current sub1, we're done!
+            # Otherwise, changingMod will be 'sub1'
             changingMod, newVal = check_subs(currentMods,
                                              changingMod,
                                              newVal,
@@ -250,6 +249,7 @@ def user_change(changingMod, newVal, currentMods):
         sub1 = SUBSTRATES.get(newVal)
         currentMods['sub1'] = sub1
         # if new sub1 fits with current proc1 and prod1, we're done!
+        # Otherwise, changingMod will be 'proc1'
         changingMod, newVal = check_procs(currentMods,
                                           changingMod,
                                           newVal,
@@ -262,6 +262,7 @@ def user_change(changingMod, newVal, currentMods):
         proc1 = PROCESSES.get(newVal)
         currentMods['proc1'] = proc1
         # if new proc1 fits with current product, we're done!
+        # Otherwise, changingMod will be 'prod1'
         changingMod, newVal = check_prods(currentMods,
                                           changingMod,
                                           newVal,
@@ -273,8 +274,8 @@ def user_change(changingMod, newVal, currentMods):
         if newVal:
             prod1 = PRODUCTS.get(newVal)
             currentMods['prod1'] = prod1
-        # materialDict = MATERIALS.get(currentMods['material']['name'])
         # if new material fits with current side2, we're done!
+        # Otherwise, changingMod will be 'side2'
         changingMod, newVal = check_side2(currentMods,
                                           changingMod,
                                           newVal
@@ -299,11 +300,12 @@ def user_change(changingMod, newVal, currentMods):
         sub2 = SUBSTRATES.get(newVal)
         currentMods['sub2'] = sub2
         # if new sub2 fits with current proc2 and prod2, we're done!
+        # Otherwise, changingMod will be 'proc2'
         changingMod, newVal = check_procs(currentMods,
                                           changingMod,
                                           newVal,
                                           PROCESSES,
-                                          floNum=1
+                                          floNum=2
                                           )
 
     if changingMod == 'proc2':
@@ -311,19 +313,31 @@ def user_change(changingMod, newVal, currentMods):
         proc2 = PROCESSES.get(newVal)
         currentMods['proc2'] = proc2
         # if new proc2 fits with current product, we're done!
+        # Otherwise, changingMod will be 'prod2'
         changingMod, newVal = check_prods(currentMods,
                                           changingMod,
                                           newVal,
-                                          floNum=1
+                                          floNum=2
                                           )
 
     if changingMod == 'prod2':
         # change proc2 to new newVal
         prod2 = PRODUCTS.get(newVal)
         currentMods['prod2'] = prod2
-        # end of updates, add  "boost" Modular Units to
-        # increase amount of side material,
-        # i.e switchgrass, algae, food waste, etc.
+        # end of updates, move on to next part of function:
+        # assembly of string-pattern
+
+        """
+        In the future, we will add "boost" Modular Units for increasing the
+        amount of side material, i.e switchgrass, algae, food waste, etc.
+
+        These can be used to link multiple bioprocesses together. For instance,
+        if you had a process that used both corn and sugar cane, you could
+        incorporate the use of switchgrass to generate enough cellulosic
+        biomass between the 3 plant sources for a large-operation cellulose
+        refinement process, which could allow for the co-production of more
+        distantly-related products.
+        """
 
     # assemble bioprocess into string-pattern
     flows = assemble_flows(currentMods)
@@ -511,7 +525,7 @@ def check_prods(currentMods,
     key = '2'.join([sub['name'], prod['name']])
     subprod = proc['subprods'].get(key)
     if subprod is None:
-        for key, val in proc1['subprods'].items():
+        for key, val in proc['subprods'].items():
             s, p = key.split('2')
             if s == sub['name']:
                 changingMod = prodKey
@@ -532,7 +546,6 @@ def check_side2(currentMods,
 
     if side2['name'] not in material['sides']:
         sides = material['sides']
-        substrate = currentMods['substrate']['name']
         for side in sides:
             if side not in ['', 'NA', substrate['name'], side1['name']]:
                 changingMod = 'side2'
