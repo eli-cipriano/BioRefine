@@ -126,7 +126,7 @@ def user_build(product, optimization=None, filter=None):
         print('Optimization and Filtering options coming soon!')
         sys.exit(0)
 
-    return [[mainFlow, sideFlow1, sideFlow2], currentMods]
+    return [flows, currentMods]
 
 
 def user_change(changingMod, newVal, currentMods):
