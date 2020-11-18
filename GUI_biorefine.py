@@ -24,7 +24,7 @@ brf functions used:
 """
 
 
-def make_layout(modValues, modules, header=''):
+def make_layout(modValues, mod_units, header=''):
     """
     formats a PySimpleGUI window to be input into PySimple's Window method.
 
@@ -89,7 +89,7 @@ def make_layout(modValues, modules, header=''):
 
                    [sg.Text('See details for:')],
 
-                   [sg.Combo(values=modules,
+                   [sg.Combo(values=mod_units,
                              key='detailOptions', size=(20, 1)),
                     sg.Button('Enter', key='Detail Chosen')], ]
 
@@ -153,8 +153,8 @@ def callback_ApplyChange(window, newVal):
     return newVal  # where does newVal go?
 
 
-def callback_UpdateMap(cm, modules, window):
-    for mod in modules:
+def callback_UpdateMap(cm, mod_units, window):
+    for mod in mod_units:
       # Boost is not implemented yet, just a potential way to link different
       # bioprocesses together via sideFlows
         if mod[0:5] != 'boost':
@@ -164,7 +164,6 @@ def callback_UpdateMap(cm, modules, window):
 
 def callback_Save():
     fileName = sg.popup_get_text('Save Bioprocess As:', 'File Saver')
-    print(fileName)
     if fileName:
         fileName = fileName.strip(' ')
         if 'json' not in fileName.split('.'):
@@ -224,20 +223,20 @@ def main():
                             )
     cm = output[1]
     # make a list of all the module names
-    modules = ['product', 'process', 'substrate', 'material',
-               'side1', 'sub1', 'proc1', 'prod1', 'boost1',
-               'side2', 'sub2', 'proc2', 'prod2', 'boost2']
+    mod_units = ['product', 'process', 'substrate', 'material',
+                 'side1', 'sub1', 'proc1', 'prod1', 'boost1',
+                 'side2', 'sub2', 'proc2', 'prod2', 'boost2']
     # store current module values for updating button names
     modValues = {}
     # to begin, no module is specified for change
     changingMod = None
 
-    for mod in modules:
+    for mod in mod_units:
         if mod[0:5] != 'boost':
             # Here's this line again. What does it do?
             modValues[mod] = cm[mod]['name']
 
-    window = sg.Window('Your Current Bioprocess', make_layout(modValues, modules))
+    window = sg.Window('Your Current Bioprocess', make_layout(modValues, mod_units))
 
     while True:  # Event Loop
         event, values = window.read()
@@ -251,18 +250,17 @@ def main():
         if event == sg.WIN_CLOSED:
             break
 
-        #
         elif event == 'Apply Change' and canApply:
             newVal = callback_ApplyChange(window, values['changeOptions'])
             output = brf.user_change(changingMod, newVal, cm)
             cm = output[1]
-            callback_UpdateMap(cm, modules, window)
+            callback_UpdateMap(cm, mod_units, window)
             changingMod = None
 
-        elif event in modules:
+        elif event in mod_units:
             if cm[event]['name'] != '':
                 changingMod = event
-                avails = brf.get_avails(changingMod, modules, cm)
+                avails = brf.get_avails(changingMod, mod_units, cm)
                 callback_UserChange(changingMod, avails, cm, window)
 
         elif event == 'Detail Chosen' and canDetail:
