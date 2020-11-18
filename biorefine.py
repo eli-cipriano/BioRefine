@@ -1,6 +1,6 @@
 """
 This is the main UI file for running/using BioRefine, bioreflib.
-It allows the user to view and change the Modules of the bioprocess, which are
+It allows the user to view and change the Modular Units of the bioprocess, which are
 the discrete units of the bioprocess. For instance, the Module 'material' might
 have the value, 'corn', or the Module 'process' might have the value
 'anaerobic_yeast'. The following diagram shows the label of each Module, which
@@ -14,7 +14,7 @@ material -> substrate -> process -> product
 side2  -> sub2  -> proc2  -> prod2
 -------------------------------------------------------------------------------
 Use the built-in help function for more detail on how to manipulate and view
-aspects of the Modules.
+aspects of the Modular Units.
 """
 
 import os
@@ -102,9 +102,9 @@ def main():
     sideFlow1 = output[0][1]  # string for side process 1
     sideFlow2 = output[0][2]  # string for side process 2
 
-    modules = ['product', 'process', 'substrate', 'material',
-               'side1', 'sub1', 'proc1', 'prod1', 'boost1',
-               'side2', 'sub2', 'proc2', 'prod2', 'boost2']
+    mod_units = ['product', 'process', 'substrate', 'material',
+                 'side1', 'sub1', 'proc1', 'prod1', 'boost1',
+                 'side2', 'sub2', 'proc2', 'prod2', 'boost2']
 
     modLayout = ''\
         '---------------------------------------------------------------------'\
@@ -135,70 +135,68 @@ def main():
 
         elif instruct.lower()[0:4] == 'view':
             # show list of available options
-            mod = read_input(instruct, modules)  # extract command from user
+            cmd = read_input(instruct, mod_units)  # extract command from user
 
-            if mod == 'help':
+            if cmd == 'help':
                 print('-------------------------------------------------------'
                       '------------------------')
                 print('VIEW HELP: \n\nType "view [MODULE]" to see a list of'
                       ' available options.\n\nList of Module labels:')
-                for module in modules:
-                    print(module)
+                for mod in mod_units:
+                    print(mod)
                 print('-------------------------------------------------------'
                       '------------------------')
-            elif mod in modules:
+            elif cmd in mod_units:
                 # use get_avails to generate list of available options
-                print('-------------------------------------------------------'
+                print('-----------------------------Available Options---------'
                       '------------------------')
-                avails = brf.get_avails(mod, modules, currentMods)  # list
+                avails = brf.get_avails(cmd, mod_units, currentMods)  # list
                 if avails is not None:
                     for a in avails:
                         if a != 'NA':
                             print(a)
-                        print(a)
                 print('-------------------------------------------------------'
                       '------------------------')
 
         elif instruct.lower()[0:6] == 'change':
             # show list of available options and ask user for input
-            mod = read_input(instruct, modules)  # extract command from user
+            cmd = read_input(instruct, mod_units)  # extract command from user
 
-            if mod == 'help':
+            if cmd == 'help':
                 print('-------------------------------------------------------'
                       '------------------------')
                 print('CHANGE HELP: \n\nType "change [MODULE]" to change the'
                       ' value of a specific module to a new value\nfrom a list'
                       ' of available options.\n\nList of Module labels:')
-                for module in modules:
-                    print(module)
+                for mod in mod_units:
+                    print(mod)
                 print('-------------------------------------------------------'
                       '------------------------')
 
-            elif mod in modules:
+            elif cmd in mod_units:
                 # use get_avails to generate list of available options
                 # use user_change to update the current bioproecess
-                print('-------------------------------------------------------'
-                      '------------------------')
-                avails = brf.get_avails(mod, modules, currentMods)  # list
+                avails = brf.get_avails(cmd, mod_units, currentMods)  # list
                 flows = [mainFlow, sideFlow1, sideFlow2]
-                get_change(avails, mod, currentMods, flows)
+                currentMods, flows = get_change(avails, cmd, currentMods, flows)
+                mainFlow, sideFlow1, sideFlow2 = flows[0], flows[1], flows[2]
 
         elif instruct.lower()[0:6] == 'detail':
             # display properties of the specified Module
-            mod = read_input(instruct, modules)  # extract command from user
+            cmd = read_input(instruct, mod_units)  # extract command from user
 
-            if mod == 'help':
+            if cmd == 'help':
                 print('-------------------------------------------------------'
                       '------------------------')
                 print('detail help...')
                 print('-------------------------------------------------------'
                       '------------------------')
 
-            elif mod in modules:
+            elif cmd in mod_units:
                 print('-------------------------------------------------------'
                       '------------------------')
-                detailMod = currentMods[mod]
-                print_details()
+                detailMod = currentMods[cmd]
+                print_details(cmd, detailMod, currentMods)
 
         elif instruct.lower() == 'map':
             # display properties of the specified Module
@@ -217,6 +215,8 @@ def get_change(avails, mod, currentMods, flows):
     sideFlow1 = flows[1]
     sideFlow2 = flows[2]
     while True:
+        print('-----------------------------Available Options---------'
+              '------------------------')
         # keep user in input mode until valid input received
         for a in avails:
             if a != 'NA':
@@ -255,12 +255,15 @@ def get_change(avails, mod, currentMods, flows):
             print('Invalid entry: Please try again.')
             brf.print_bioprocess(mainFlow, sideFlow1, sideFlow2)
 
+    return currentMods, [mainFlow, sideFlow1, sideFlow2]
 
-def print_details(detailMod, currentMods):
+
+def print_details(mod, detailMod, currentMods):
     """
     sub function for receiving input from user on which module they would like
     to view detailed properties of.
     """
+    print(mod)
     for key, val in detailMod.items():
         if key == 'subprods':
             # list strain options line by line
@@ -288,7 +291,7 @@ def print_details(detailMod, currentMods):
             print(key+': {}'.format(val))
 
 
-def read_input(instruct, modules):
+def read_input(instruct, mod_units):
     """
     sub function for interpreting user command
     """
@@ -298,7 +301,7 @@ def read_input(instruct, modules):
     # handle mis-inputs
     if len(cmd) <= 1:
         cmd.append('help')
-    elif len(cmd) > 1 and cmd[1] not in modules:
+    elif len(cmd) > 1 and cmd[1] not in mod_units:
         cmd[1] = 'help'
     mod = cmd[1]
     return mod
