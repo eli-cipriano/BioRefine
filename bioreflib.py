@@ -2,7 +2,7 @@
 This library aids the development of an integrated bioprocess for a specified
 product. It is used primarily by biorefine.py to allow the user to create a
 bioprocess and then manipulate the steps within that process. The bioprocess is
-made up of 12 modules:
+made up of 12 Modular Units:
 
     [product, process, substrate, material,
     side1, sub1, proc1, prod1,
@@ -10,11 +10,11 @@ made up of 12 modules:
 
 Two additional mods boost1, and boost2 may be added in later. The bioprocess is
 built and updated in the same directional flow. It starts at the "top", which is
-the "product" module, and goes through process and substrate, ending on the
-"material" module. After these four steps, if a side material exists, the flow
-will go to the "side1" module and populate the subsequent modules. If a second
-side material exists, the flow jumps to the "side2" module and populates those
-subsequent modules.
+the "product" Unit, and goes through process and substrate, ending on the
+"material" Unit. After these four steps, if a side material exists, the flow
+will go to the "side1" Modular Unit and populate the subsequent Modular Units. If a second
+side material exists, the flow jumps to the "side2" Modular Unit and populates those
+subsequent Modular Units.
 
 The main database is made up of three CSV files that describe the properties of
 various raw materials (mat2sub), waste by-products (side2sub), and
@@ -27,7 +27,7 @@ The two main functions for the bioprocessing side of the code are:
 is a change. The user is only allowed to pick a new value from a list of valid
 options. For example, if the user wants to change the current material, they
 will only be allowed to pick from a list of materials that are associated with
-the module immediately infront of it, which is "substrate". Similarly, to change
+the Modular Unit immediately infront of it, which is "substrate". Similarly, to change
 "sub1", it must be compatible with "side1", according to the directional flow of
 the program.
 
@@ -41,23 +41,23 @@ import json
 
 def user_build(product, optimization=None, filter=None):
     """
-    This function builds the "Bioprocess", which is the network of modules and
+    This function builds the "Bioprocess", which is the network of Modular Units and
     their values. The user only specifies the product, and then the rest of the
     values are ensured to be "compatible" and then chosen alphabetically.
     Eventually we want to implement some sort of optimization where it always
     chooses the "best" value.
 
-    Compatibility of neighboring modules is more complex for some modules than
+    Compatibility of neighboring Modular Units is more complex for some Modular Units than
     others. For materials, it's jsut a matter of checking that a material exists
     within the "materials" key of the chosen substrate. For compatability of
     substrates, processes, and products, we have to check that within that
     process, it is actually possible to convert the chosen substrate to the
     specified product, which is described by the "sub2prod" key in the process
-    module.
+    Unit.
     """
-    # initialize the bioprocess Modules for a specified product
+    # initialize the bioprocess Modular Units for a specified product
 
-    currentMods = {}  # dictionary of current Module values
+    currentMods = {}  # dictionary of current Modular Unit values
     dicts = call_json()  # acquire libraries
     PRODUCTS = dicts['PRODUCTS']  # dictionary of all known products
     PROCESSES = dicts['PROCESSES']  # dictionary of all known processes
@@ -68,7 +68,7 @@ def user_build(product, optimization=None, filter=None):
     ts = ' -> '  # transition string
     currentMods['product'] = PRODUCTS.get(product)  # update product
     if optimization is None and filter is None:
-        # no opt or filt specified, choose first available module value
+        # no opt or filt specified, choose first available Modular Unit value
         process = PRODUCTS.get(product)['processes'][0]
         for key, val in PROCESSES.get(process)['subprods'].items():
             sub, prod = key.split('2')
@@ -77,13 +77,13 @@ def user_build(product, optimization=None, filter=None):
                 break
         material = SUBSTRATES.get(substrate)['materials'][0]
 
-        #  write output string and update Module values
+        #  write output string and update Modular Unit values
         mainFlow = material + ts + substrate + ts + process + ts + product
         currentMods['process'] = PROCESSES.get(process)
         currentMods['substrate'] = SUBSTRATES.get(substrate)
         currentMods['material'] = MATERIALS.get(material)
 
-        # initialize and update sideFlow Module values, output strings
+        # initialize and update sideFlow Modular Unit values, output strings
         currentMods = replace_sideFlow('side1', currentMods)
         currentMods = replace_sideFlow('side2', currentMods)
 
@@ -104,7 +104,7 @@ def user_build(product, optimization=None, filter=None):
                     prod1 = prod
                     break
 
-            #  write output string and update Module values
+            #  write output string and update Modular Unit values
             sideFlow1 = side1 + ts + sub1 + ts + proc1 + ts + prod1
             currentMods['side1'] = SIDES.get(side1)
             currentMods['sub1'] = SUBSTRATES.get(sub1)
@@ -121,7 +121,7 @@ def user_build(product, optimization=None, filter=None):
                     prod2 = prod
                     break
 
-            #  write output string and update Module values
+            #  write output string and update Modular Unit values
             sideFlow2 = side2 + ts + sub2 + ts + proc2 + ts + prod2
             currentMods['side2'] = SIDES.get(side2)
             currentMods['sub2'] = SUBSTRATES.get(sub2)
@@ -129,7 +129,7 @@ def user_build(product, optimization=None, filter=None):
             currentMods['prod2'] = PRODUCTS.get(prod2)
 
     else:
-        # filter available Module values and optimize decision making
+        # filter available Modular Unit values and optimize decision making
         print('Optimization and Filtering options coming soon!')
         sys.exit(0)
 
@@ -138,31 +138,31 @@ def user_build(product, optimization=None, filter=None):
 
 def user_change(changingMod, newVal, currentMods):
     """
-    This function takes a specific module to change (see top for modules).
+    This function takes a specific Modular Unit to change (see top for Modular Units).
     This function becomes much more clear after the use of biorefine.py or
     GUI_biorefine.py.
 
     The logical flow follows the directional flow described in the documentation
-    for this library. It starts by first checking the product module. If the
-    user has chosen the product as the module they want to change, that code
+    for this library. It starts by first checking the product Unit. If the
+    user has chosen the product as the Modular Unit they want to change, that code
     block will activate and change the product to the new value. Then, the
-    program checks the compatibility of the next module, "process", with the
+    program checks the compatibility of the next Unit, "process", with the
     new "product" value.
 
-    If the next module is compatible, then the code stops checking other modules
+    If the next Modular Unit is compatible, then the code stops checking other Modular Units
     and updates all the values that were changed.
 
-    If the next module is not compatible, a new value for that module is
+    If the next Modular Unit is not compatible, a new value for that Modular Unit is
     selected and the program moves to the next code block. This process repeats
     along the directional flow of the program until it reaches a compatible
-    module.
+    Unit.
 
     Compatability is even more complicated in this function because we have to
     check that the new values are compatible with the Bioprocess that existed
     before the changes. For instance, if the user specifies a new material, the
-    side1 and side2 modules need to both be updated since they depend on the
+    side1 and side2 Modular Units need to both be updated since they depend on the
     value of the material. If side1 then updates to a new value, this could
-    affect all or none of the following modules, depending on the value of
+    affect all or none of the following Modular Units, depending on the value of
     side1.
     """
     # extract main dicts:
@@ -173,7 +173,7 @@ def user_change(changingMod, newVal, currentMods):
     MATERIALS = dicts['MATERIALS']
     SIDES = dicts['SIDES']
 
-    # make module dictionaries to determine current state of the Bioprocess
+    # make Modular Unit dictionaries to determine current state of the Bioprocess
     product = currentMods['product']
     process = currentMods['process']
     substrate = currentMods['substrate']
@@ -189,7 +189,7 @@ def user_change(changingMod, newVal, currentMods):
     prod2 = currentMods['prod2']
     boost2 = currentMods['boost2']
 
-    # begin process of updating Module values based on initial input
+    # begin process of updating Modular Unit values based on initial input
     if changingMod == 'product':
         # change process to new newVal
         product = PRODUCTS.get(newVal)
@@ -380,7 +380,7 @@ def user_change(changingMod, newVal, currentMods):
         # change proc2 to new newVal
         prod2 = PRODUCTS.get(newVal)
         currentMods['prod2'] = prod2
-        # end of updates, add  "boost" Modules to
+        # end of updates, add  "boost" Modular Units to
         # increase amount of side material,
         # i.e switchgrass, algae, food waste, etc.
 
@@ -450,48 +450,48 @@ def write_bioprocess(currentMods, fileName):
     return None
 
 
-def get_avails(module, modules, currentMods):
+def get_avails(mod, mod_units, currentMods):
     avails = []
     dicts = call_json()
-    if module in modules[0:4]:
-        if module == 'product':
+    if mod in mod_units[0:4]:
+        if mod == 'product':
             avails = list(dicts['PRODUCTS'].keys())
-        elif module == 'process':
+        elif mod == 'process':
             avails = currentMods['product']['processes']
-        elif module == 'substrate':
+        elif mod == 'substrate':
             subprods = currentMods['process']['subprods']
             product = currentMods['product']['name']
             for key, val in subprods.items():
                 sub, prod = key.split('2')
                 if prod == product:
                     avails.append(sub)
-        elif module == 'material':
+        elif mod == 'material':
             avails = currentMods['substrate']['materials']
         return avails
 
-    elif module in modules[4:14]:
-        if module in ['prod1', 'prod2']:
-            if module == 'prod1':
+    elif mod in mod_units[4:14]:
+        if mod in ['prod1', 'prod2']:
+            if mod == 'prod1':
                 subprods = currentMods['proc1']['subprods']
                 substrate = currentMods['sub1']['name']
-            elif module == 'prod2':
+            elif mod == 'prod2':
                 subprods = currentMods['proc2']['subprods']
                 substrate = currentMods['sub2']['name']
             for key, val in subprods.items():
                 sub, prod = key.split('2')
                 if sub == substrate:
                     avails.append(prod)
-        elif module in ['proc1', 'proc2']:
-            if module == 'proc1':
+        elif mod in ['proc1', 'proc2']:
+            if mod == 'proc1':
                 avails = currentMods['sub1']['processes']
-            elif module == 'proc2':
+            elif mod == 'proc2':
                 avails = currentMods['sub2']['processes']
-        elif module in ['sub1', 'sub2']:
-            if module == 'sub1':
+        elif mod in ['sub1', 'sub2']:
+            if mod == 'sub1':
                 avails = currentMods['side1']['substrates']
-            elif module == 'sub2':
+            elif mod == 'sub2':
                 avails = currentMods['side2']['substrates']
-        elif module in ['side1', 'side2']:
+        elif mod in ['side1', 'side2']:
             avails = currentMods['material']['sides']
         return avails
 
@@ -775,7 +775,7 @@ def get_column(file_name,
 
     * We may consider adding the my_utils.py library if linear/binary searching
     becomes necessary, but for now we just copied the get_columns code in. We
-    could also link the code as a git submodule.
+    could also link the code as a git subUnit.
     """
     # convert list to int if only single column requested
     if type(result_column) == list and len(result_column) <= 1:
