@@ -9,12 +9,12 @@ made up of 12 Modular Units:
     side2, sub2, proc2, prod2]
 
 Two additional mods boost1, and boost2 may be added in later. The bioprocess is
-built and updated in the same directional flow. It starts at the "top", which is
-the "product" Unit, and goes through process and substrate, ending on the
+built and updated in the same directional flow. It starts at the "top", which
+is the "product" Unit, and goes through process and substrate, ending on the
 "material" Unit. After these four steps, if a side material exists, the flow
-will go to the "side1" Modular Unit and populate the subsequent Modular Units. If a second
-side material exists, the flow jumps to the "side2" Modular Unit and populates those
-subsequent Modular Units.
+will go to the "side1" Modular Unit and populate the subsequent Modular Units.
+If a second side material exists, the flow jumps to the "side2" Modular Unit
+and populates those subsequent Modular Units.
 
 The main database is made up of three CSV files that describe the properties of
 various raw materials (mat2sub), waste by-products (side2sub), and
@@ -27,9 +27,9 @@ The two main functions for the bioprocessing side of the code are:
 is a change. The user is only allowed to pick a new value from a list of valid
 options. For example, if the user wants to change the current material, they
 will only be allowed to pick from a list of materials that are associated with
-the Modular Unit immediately infront of it, which is "substrate". Similarly, to change
-"sub1", it must be compatible with "side1", according to the directional flow of
-the program.
+the Modular Unit immediately infront of it, which is "substrate". Similarly, to
+change "sub1", it must be compatible with "side1", according to the directional
+flow of the program.
 
 The main functions for the database side of the code are:
 - build_
@@ -41,19 +41,32 @@ import json
 
 def user_build(product, optimization=None, filter=None):
     """
-    This function builds the "Bioprocess", which is the network of Modular Units and
-    their values. The user only specifies the product, and then the rest of the
-    values are ensured to be "compatible" and then chosen alphabetically.
-    Eventually we want to implement some sort of optimization where it always
-    chooses the "best" value.
+    This function builds the "Bioprocess", which is the network of Modular
+    Units and their values. The user only specifies the product, and then the
+    rest of the values are ensured to be "compatible" and then chosen
+    alphabetically. Eventually we want to implement some sort of optimization
+    where it always chooses the "best" value.
 
-    Compatibility of neighboring Modular Units is more complex for some Modular Units than
-    others. For materials, it's jsut a matter of checking that a material exists
-    within the "materials" key of the chosen substrate. For compatability of
-    substrates, processes, and products, we have to check that within that
-    process, it is actually possible to convert the chosen substrate to the
-    specified product, which is described by the "sub2prod" key in the process
-    Unit.
+    Compatibility of neighboring Modular Units is more complex for some Modular
+    Units than others. For materials, it's jsut a matter of checking that a
+    material exists within the "materials" key of the chosen substrate. For
+    compatability of substrates, processes, and products, we have to check that
+    within that process, it is actually possible to convert the chosen
+    substrate to the specified product, which is described by the "sub2prod"
+    key in the process Unit.
+
+    Parameters
+    -----------
+    product: str, the name of the product you want to build towards
+    optimization: str, which factor you want to optimize for in selecting
+        a bioprocess (IN PROGRESS)
+    filter: str, what you want to filter through in selecting a bioprocess
+        (IN PROGRESS)
+
+    Returns
+    --------
+    a bioprocess map towards that process, which can then be modified.
+
     """
     # initialize the bioprocess Modular Units for a specified product
 
@@ -131,32 +144,43 @@ def user_build(product, optimization=None, filter=None):
 
 def user_change(changingMod, newVal, currentMods):
     """
-    This function takes a specific Modular Unit to change (see top for Modular Units).
-    This function becomes much more clear after the use of biorefine.py or
-    GUI_biorefine.py.
+    This function takes a specific Modular Unit to change (see top for Modular
+    Units). This function becomes much more clear after the use of biorefine.py
+    or GUI_biorefine.py.
 
-    The logical flow follows the directional flow described in the documentation
-    for this library. It starts by first checking the product Unit. If the
-    user has chosen the product as the Modular Unit they want to change, that code
-    block will activate and change the product to the new value. Then, the
-    program checks the compatibility of the next Unit, "process", with the
-    new "product" value.
+    The logical flow follows the directional flow described in the
+    documentation for this library. It starts by first checking the product
+    Unit. If the user has chosen the product as the Modular Unit they want
+    to change, that code block will activate and change the product to the
+    new value. Then, the program checks the compatibility of the next Unit,
+    "process", with the new "product" value.
 
-    If the next Modular Unit is compatible, then the code stops checking other Modular Units
-    and updates all the values that were changed.
+    If the next Modular Unit is compatible, then the code stops checking other
+    Modular Units and updates all the values that were changed.
 
-    If the next Modular Unit is not compatible, a new value for that Modular Unit is
-    selected and the program moves to the next code block. This process repeats
-    along the directional flow of the program until it reaches a compatible
-    Unit.
+    If the next Modular Unit is not compatible, a new value for that Modular
+    Unit is selected and the program moves to the next code block. This process
+    repeats along the directional flow of the program until it reaches a
+    compatible Unit.
 
     Compatability is even more complicated in this function because we have to
     check that the new values are compatible with the Bioprocess that existed
     before the changes. For instance, if the user specifies a new material, the
-    side1 and side2 Modular Units need to both be updated since they depend on the
-    value of the material. If side1 then updates to a new value, this could
-    affect all or none of the following Modular Units, depending on the value of
-    side1.
+    side1 and side2 Modular Units need to both be updated since they depend on
+    the value of the material. If side1 then updates to a new value, this could
+    affect all or none of the following Modular Units, depending on the value
+    of side1.
+
+    Parameters
+    -----------
+    changingMod: str, modular unit you want to change
+    newVal: str, modular unit you want to change changingMod to
+    currentMods: str, the position of the modular unit to change
+
+    Returns
+    --------
+    The bioprocess map is updated with newVal in the currentMods position
+
     """
     # extract main dicts:
     dicts = call_json()
@@ -166,7 +190,8 @@ def user_change(changingMod, newVal, currentMods):
     MATERIALS = dicts['MATERIALS']
     SIDES = dicts['SIDES']
 
-    # make Modular Unit dictionaries to determine current state of the Bioprocess
+    # make Modular Unit dictionaries to determine current state
+    # of the Bioprocess
     product = currentMods['product']
     process = currentMods['process']
     substrate = currentMods['substrate']
@@ -1010,6 +1035,18 @@ def get_column(file_name,
 def track_dates(a, date_column, results, result_column):
     """
     Used exclusively by get_column
+
+    Parameters
+    -----------
+    a: parameter from get_column
+    date_column: parameter from get_column
+    results: why is results an input and also what is returned?
+    result_column: parameter from get_column
+
+    Returns
+    --------
+    formats date output in a readable format for get_column
+
     """
     # check that dates are in a readable format
     try:
@@ -1056,6 +1093,17 @@ def track_dates(a, date_column, results, result_column):
 def append_results(a, results, result_column):
     """
     Used exclusively by get_column
+
+    Parameters
+    -----------
+    a: parameter from get_column
+    results:
+    result_column: parameter from from get_column
+
+    Returns
+    --------
+    append results to output in get_column
+
     """
     if type(result_column) == int:
         value = a[result_column]
