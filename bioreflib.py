@@ -70,7 +70,7 @@ def user_build(product, optimization=None, filter=None):
         # no opt or filt specified, choose first available Modular Unit value
         process = PRODUCTS.get(product)['processes'][0]
         for key, val in PROCESSES.get(process)['subprods'].items():
-            sub, prod = key.split('2')
+            sub, prod = key.split('*2*')
             if prod == product:
                 substrate = sub
                 break
@@ -95,7 +95,7 @@ def user_build(product, optimization=None, filter=None):
             sub1 = SIDES.get(side1)['substrates'][0]
             proc1 = SUBSTRATES.get(sub1)['processes'][0]
             for key, val in PROCESSES.get(proc1)['subprods'].items():
-                sub, prod = key.split('2')
+                sub, prod = key.split('*2*')
                 if sub == sub1:
                     prod1 = prod
                     break
@@ -110,7 +110,7 @@ def user_build(product, optimization=None, filter=None):
             sub2 = SIDES.get(side2)['substrates'][0]
             proc2 = SUBSTRATES.get(sub2)['processes'][0]
             for key, val in PROCESSES.get(proc2)['subprods'].items():
-                sub, prod = key.split('2')
+                sub, prod = key.split('*2*')
                 if sub == sub2:
                     prod2 = prod
                     break
@@ -226,7 +226,8 @@ def user_change(changingMod, newVal, currentMods):
         # Otherwise, changingMod will be 'side1/2'
         changingMod, newVal = check_sides(currentMods,
                                           changingMod,
-                                          newVal
+                                          newVal,
+                                          floNum=1
                                           )
 
     if changingMod == 'side1':
@@ -276,9 +277,10 @@ def user_change(changingMod, newVal, currentMods):
             currentMods['prod1'] = prod1
         # if new material fits with current side2, we're done!
         # Otherwise, changingMod will be 'side2'
-        changingMod, newVal = check_side2(currentMods,
+        changingMod, newVal = check_sides(currentMods,
                                           changingMod,
-                                          newVal
+                                          newVal,
+                                          floNum=2
                                           )
 
     if changingMod == 'side2':
@@ -364,7 +366,7 @@ def check_process(currentMods,
     # if new product fits with current process & substrate, we're done!
     if subprod is None:
         for key, val in process['subprods'].items():
-            sub, prod = key.split('2')
+            sub, prod = key.split('*2*')
             if prod == product['name']:
                 changingMod = 'substrate'
                 newVal = sub
@@ -390,7 +392,7 @@ def check_substrate(currentMods,
     subprod = process['subprods'].get(key)
     if subprod is None:
         for key, val in process['subprods'].items():
-            sub, prod = key.split('2')
+            sub, prod = key.split('*2*')
             if prod == product['name']:
                 changingMod = 'substrate'
                 newVal = sub
@@ -405,7 +407,6 @@ def check_material(currentMods,
     # call specific Modular Unit Values
     substrate = currentMods['substrate']
     material = currentMods['material']
-
     # check compatability of material with new substrate
     if material['name'] not in substrate['materials']:
         changingMod = 'material'
@@ -416,7 +417,8 @@ def check_material(currentMods,
 
 def check_sides(currentMods,
                 changingMod,
-                newVal
+                newVal,
+                floNum=1
                 ):
 
     # call specfic Modular Unit Values
@@ -426,7 +428,8 @@ def check_sides(currentMods,
     substrate = currentMods['substrate']
 
     # check compatability of side1 with new material
-    if side1['name'] not in material['sides']:
+    if side1['name'] not in material['sides'] and floNum != 2:
+        print('side1: '+side1['name']+'\nmaterial: '+material['name'])
         sides = material['sides']
         for side in sides:
             if side not in ['NA', substrate['name']]:
@@ -438,7 +441,8 @@ def check_sides(currentMods,
             changingMod = 'prod1'
 
     # check compatability of side2 with new material
-    elif side2['name'] not in material['sides']:
+    elif side2['name'] not in material['sides'] and floNum:
+        print('side2: '+side2['name']+'\nmaterial: '+material['name'])
         sides = material['sides']
         for side in sides:
             if side not in ['NA', substrate['name'], side1['name']]:
@@ -492,7 +496,7 @@ def check_procs(currentMods,
         subprod = proc['subprods'].get(key)
         if subprod is None:
             for key, val in proc['subprods'].items():
-                s, p = key.split('2')
+                s, p = key.split('*2*')
                 if s == sub['name']:
                     changingMod = prodKey
                     newVal = p
@@ -526,33 +530,10 @@ def check_prods(currentMods,
     subprod = proc['subprods'].get(key)
     if subprod is None:
         for key, val in proc['subprods'].items():
-            s, p = key.split('2')
+            s, p = key.split('*2*')
             if s == sub['name']:
                 changingMod = prodKey
                 newVal = p
-
-    return changingMod, newVal
-
-
-def check_side2(currentMods,
-                changingMod,
-                newVal,
-                ):
-    # call
-    side2 = currentMods['side2']
-    side1 = currentMods['side1']
-    material = currentMods['material']
-    substrate = currentMods['substrate']
-
-    if side2['name'] not in material['sides']:
-        sides = material['sides']
-        for side in sides:
-            if side not in ['', 'NA', substrate['name'], side1['name']]:
-                changingMod = 'side2'
-                newVal = side
-
-        if changingMod != 'side2':
-            currentMods = replace_sideFlow('side2', currentMods)
 
     return changingMod, newVal
 
@@ -638,7 +619,7 @@ def get_avails(mod, mod_units, currentMods):
             subprods = currentMods['process']['subprods']
             product = currentMods['product']['name']
             for key, val in subprods.items():
-                sub, prod = key.split('2')
+                sub, prod = key.split('*2*')
                 if prod == product:
                     avails.append(sub)
         elif mod == 'material':
@@ -654,7 +635,7 @@ def get_avails(mod, mod_units, currentMods):
                 subprods = currentMods['proc2']['subprods']
                 substrate = currentMods['sub2']['name']
             for key, val in subprods.items():
-                sub, prod = key.split('2')
+                sub, prod = key.split('*2*')
                 if sub == substrate:
                     avails.append(prod)
         elif mod in ['proc1', 'proc2']:
@@ -823,15 +804,15 @@ def build_subprods(results):
     # make a list of unique conversions
     pairs = []
     for r in results:
-        pairs.append('2'.join([r[0], r[1]]))
+        pairs.append('*2*'.join([r[0], r[1]]))
 
     # get information for each conversion
     for pair in sorted(list(set(pairs))):
-        substrate, product = pair.split('2')
+        substrate, product = pair.split('*2*')
 
         # pass in 2 queries so that both values have to be true
         strains = get_column('data_sub2prod.csv', result_column=[1, 4, 5, 6],
-                             query_column=[2, 3], query_value=pair.split('2'))
+                             query_column=[2, 3], query_value=pair.split('*2*'))
         subprods[pair] = {'substrate': substrate,
                           'product': product,
                           'strains': strains}
@@ -891,6 +872,7 @@ def build_materials():
                 side1 = a[2]
                 side2 = a[3]
                 sides = [side1, side2]
+                print(a)
                 c1, c2, c3 = a[4].split('/')
                 comp = [float(c1), float(c2), float(c3)]
                 comp_source = a[5]

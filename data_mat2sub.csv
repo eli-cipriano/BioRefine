@@ -4,8 +4,11 @@ sugar cane,glucose,cellulose,NA,0.3/0.7/0,cs2,t2,5,ys1
 poplar,oil,cellulose,NA,0.2/0.8/0,cs3,t3,10,ys3
 sunflower,oil,cellulose,NA,0.2/0.8/0,cs4,t4,5,ys4
 wheat,glucose,germ,NA,0.3/0.7/0,cs5,t5,3,ys5
-wastewater,acetate,ammonia,phosphate,0.4/0.6/0,cs6,t6,NA,NA
+wastewater,acetate,ammonia,phosphate,0.4/0.4/0.2,cs6,t6,NA,NA
+wastewater,glycerol,ammonia,phosphate,0.4/0.4/0.2,cs9,t6.5,NA,NA
 paper,cellulose,NA,NA,NA,NA,t7,NA,NA
 biogas,methane,NA,NA,NA,NA,t8,NA,NA
-switchgrass,cellulose,NA,NA,NA,NA,t9,NA,NA
-algae,germ,NA,NA,NA,NA,t10,NA,NA
+switchgrass,cellulose,xylan,NA,0.7/0.3/0,cs7,t9,5,ys6
+algae,oil,xylan,germ,0.3/0.3/0.4,cs8,t10,2,ys7
+xylan,xylose,NA,NA,NA,NA,t8,NA,NA
+cellulose,avicel,NA,NA,NA,NA,t8,NA,NA
