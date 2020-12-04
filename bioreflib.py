@@ -370,7 +370,6 @@ def check_sides(currentMods,
 
     # check compatability of side2 with new material
     elif side2['name'] not in material['sides'] and floNum:
-        print('side2: '+side2['name']+'\nmaterial: '+material['name'])
         sides = material['sides']
         for side in sides:
             if side not in ['NA', substrate['name'], side1['name']]:
@@ -702,15 +701,15 @@ def write_json():
     SUBSTRATES = dicts['SUBSTRATES']
     MATERIALS = dicts['MATERIALS']
     SIDES = dicts['SIDES']
-    with open('Jproducts.json', 'w') as f:
+    with open('.biorefine_data/Jproducts.json', 'w') as f:
         json.dump(PRODUCTS, f)
-    with open('Jprocesses.json', 'w') as f:
+    with open('.biorefine_data/Jprocesses.json', 'w') as f:
         json.dump(PROCESSES, f)
-    with open('Jsubstrates.json', 'w') as f:
+    with open('.biorefine_data/Jsubstrates.json', 'w') as f:
         json.dump(SUBSTRATES, f)
-    with open('Jmaterials.json', 'w') as f:
+    with open('.biorefine_data/Jmaterials.json', 'w') as f:
         json.dump(MATERIALS, f)
-    with open('Jsides.json', 'w') as f:
+    with open('.biorefine_data/Jsides.json', 'w') as f:
         json.dump(SIDES, f)
 
     return None
@@ -721,15 +720,15 @@ def call_json():
     Loads json files and organizes them into a dict of dicts
     """
     dicts = {}
-    with open('Jproducts.json') as j:
+    with open('.biorefine_data/Jproducts.json') as j:
         PRODUCTS = json.load(j)
-    with open('Jprocesses.json') as j:
+    with open('.biorefine_data/Jprocesses.json') as j:
         PROCESSES = json.load(j)
-    with open('Jsubstrates.json') as j:
+    with open('.biorefine_data/Jsubstrates.json') as j:
         SUBSTRATES = json.load(j)
-    with open('Jmaterials.json') as j:
+    with open('.biorefine_data/Jmaterials.json') as j:
         MATERIALS = json.load(j)
-    with open('Jsides.json') as j:
+    with open('.biorefine_data/Jsides.json') as j:
         SIDES = json.load(j)
 
     tags = ['PRODUCTS', 'PROCESSES', 'SUBSTRATES', 'MATERIALS', 'SIDES']
@@ -765,13 +764,13 @@ def build_products():
     """
     products = {}
     # make a list of unique products
-    prodList = get_column('data_sub2prod.csv', result_column=3)
+    prodList = get_column('.biorefine_data/data_sub2prod.csv', result_column=3)
     prodList = sorted(list(set(prodList)))
 
     # extract information for each product
     for prod in prodList:
         processes = []
-        results = get_column('data_sub2prod.csv', result_column=0,
+        results = get_column('.biorefine_data/data_sub2prod.csv', result_column=0,
                              query_column=3, query_value=prod)
         for r in sorted(list(set(results))):
             processes.append(r)
@@ -788,12 +787,12 @@ def build_processes():
     """
     processes = {}
     # make a list of unique processes
-    processList = get_column('data_sub2prod.csv', result_column=0)
+    processList = get_column('.biorefine_data/data_sub2prod.csv', result_column=0)
     processList = sorted(list(set(processList)))
 
     # extract information for each process
     for proc in processList:
-        results = get_column('data_sub2prod.csv',
+        results = get_column('.biorefine_data/.biorefine_data/data_sub2prod.csv',
                              result_column=[2, 3],
                              query_column=0,
                              query_value=proc)
@@ -829,7 +828,7 @@ def build_subprods(results):
         substrate, product = pair.split('*2*')
 
         # pass in 2 queries so that both values have to be true
-        strains = get_column('data_sub2prod.csv', result_column=[1, 4, 5, 6],
+        strains = get_column('.biorefine_data/data_sub2prod.csv', result_column=[1, 4, 5, 6],
                              query_column=[2, 3], query_value=pair.split('*2*'))
         subprods[pair] = {'substrate': substrate,
                           'product': product,
@@ -843,11 +842,11 @@ def build_substrates():
     """
     substrates = {}
     # make a list of unique substrates
-    subList = get_column('data_sub2prod.csv', result_column=2)
+    subList = get_column('.biorefine_data/data_sub2prod.csv', result_column=2)
     subList = sorted(list(set(subList)))
     for sub in subList:
         # get a list of unique processes
-        results = get_column('data_sub2prod.csv', result_column=0,
+        results = get_column('.biorefine_data/data_sub2prod.csv', result_column=0,
                              query_column=2, query_value=sub)
         processes = []
         for r in sorted(list(set(results))):
@@ -856,7 +855,7 @@ def build_substrates():
         # pass in 3 queries so that only one value has to be true
         # checking material, side1, side2 columns to
         # make a list of unique materials.
-        results = get_column('data_mat2sub.csv', result_column=0,
+        results = get_column('.biorefine_data/data_mat2sub.csv', result_column=0,
                              query_column=[1, 2, 3],
                              query_value=[sub, sub, sub],
                              searchOr=True)
@@ -878,7 +877,7 @@ def build_materials():
     I never went back and updated it, but this works for now.
     """
     materials = {}
-    with open('data_mat2sub.csv', 'r') as f:
+    with open('.biorefine_data/data_mat2sub.csv', 'r') as f:
         header = f.readline()
         for line in f:
             a = line.rstrip().split(',')
@@ -907,12 +906,12 @@ def build_materials():
 def build_sides():
     sides = {}
     # make list of unique side materials
-    sidesList = get_column('data_side2sub.csv', result_column=0)
+    sidesList = get_column('.biorefine_data/data_side2sub.csv', result_column=0)
     sidesList = sorted(list(set(sidesList)))
 
     # extract information for each side material
     for side in sidesList:
-        results = get_column('data_side2sub.csv', result_column=[1, 2, 3, 4],
+        results = get_column('.biorefine_data/data_side2sub.csv', result_column=[1, 2, 3, 4],
                              query_column=0, query_value=side)
         substrates = []
         treatments = []
