@@ -8,6 +8,10 @@ cellulose,glucose,mechanical,0.7,s6
 cellulose,glucose,mechanical,0.7,s7
 cellulose,methane,enzymatic,0.9,s8
 cellulose,acetate,enzymatic,0.6,s9
+cellulose,avicel,hydrolysis,0.8,s10
+cellulose,cellulose,NA,1,NA
+xylan,xylose,hydrolysis,0.9,s11
+xylan,xylan,NA,1,NA
 ammonia,ammonia,NA,1,NA
 phosphate,phosphate,NA,1,NA
 germ,oil,cold press,0.3,s8

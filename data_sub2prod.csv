@@ -18,3 +18,28 @@ thermochemical,separation,ammonia,fertilizer,0.6,NA,NA
 thermochemical,separation,phosphate,phosphorus,0.4,NA,NA
 thermochemical,separation,oil,cooking_oil,0.8,NA,NA
 mechanical,milling,germ,feed,0.9,NA,NA
+yeast,s4,glucose,taxadiene,0.005,paclitaxel,Apel et al.  2017,"0.4 % w/v - 5 mL YPD - 2 g glucose? - 20 mg/L taxadiene - 5 mL - 0.005 L - 0.02 g/L - 0.0001 g taxadiene - 0.00005 - 0.005"
+ecoli,s4,glycerol,diterpenes,0.033,NA,Jia et al. 2017,"15mg/L - MAX titer - in 50mL TB. Yeast extract appears to be glucose-free - and tryptone is a peptide - glycerol is the carbon source here. 4mL/L glyc = 4.5g/L"
+yeast,s5,glucose,fatty alcohols,0.2,NA,d'Espeaux et al. 2017,"feed: ""lignocellulosic feedstocks derived from ionic-liquid treated switchgrass and sorghum"""
+C. cellulyticum,s1,cellulose,n-butanol,,NA,NA,
+ecoli,s6,glucose,1-propanol,0.003,1-butanol,Shen & Liao 2008,~90mg/L from fig. 5a. For both: 20mL culture at 30g/L glucose
+ecoli,s6,glucose,1-butanol,0.0027,1-propanol,Shen & Liao 2008,~80mg/L from fig. 5a
+T. fusca,s1,glucose,1-propanol,0.162,NA,Deng & Fong 2011,table 5
+T. fusca,s1,cellulose,1-propanol,0.216,NA,Deng & Fong 2011,table 5
+T. fusca,s1,avicel,1-propanol,0.357,NA,Deng & Fong 2011,table 5
+T. fusca,s1,switchgrass,1-propanol,0.373,NA,Deng & Fong 2011,table 5
+T. fusca,s1,cellulose,1-propanol,0.373,NA,Deng & Fong 2011,table 5
+ecoli,s7,acetate,isobutyl acetate,0.228,NA,Tashiro et al. 2015,also requires glucose - how to account for this? Also: 0.228g/g is 75% of theoretical max yield
+ecoli,s8,cellulose,D-limonene,0.015,NA,Frederix et al. 2016,"150mg/L - 10mL cultures; I *think* glucose is at 10g/L"
+ecoli,s9,glucose,farnesyl acetate,0.01,NA,Guo et al. 2018,"201mg/L - from 10mL culture at 20g/L glucose"
+ecoli,s10,acetate,P3HB,0.2,P(3HB-co-5.79 mol% 4HB),Chen et al. 2018,PHA precursors. Add yeast extract or corn steep as N sources to boost titer. From 5 g acetate + 1.5 g proprionate. By-product takes up another 0.263 of carbon source.
+yeast,s6,xylose,ethanol,0.32,NA,Ha et al. 2011,"coferment with xylose AND cellulose - and get yield = 0.39"
+yeast,s7,cellulose,ethanol,0.32,NA,Ha et al. 2011,"coferment with xylose AND cellulose - and get yield = 0.39"
+yeast,s8,acetate,ethanol,0.5,NA,Zhang et al. 2017,also requires xylose - how to account for this?
+yeast,s9,glucose,isobutanol,,NA,US9771602B2,
+ecoli,s11,glycerol,ethanol,0.45,NA,Trinh & Srienc 2009,"yield from abstract: ""90% of theoretical yield"" which they say is 500g ethanol/g glycerol"
+c. glutamicum,s1,glucose,hydroxypropionic acid,0.51,NA,Chen et al. 2017,
+c. glutamicum,s2,glucose,1-2-propanediol,0.145,NA,Siebert & Wendisch 2015,1mL samples taken with 2% glucose content for supernatant measurements. 0.343mol/mol
+c. glutamicum,s4,glucose,isobutanol,0.245,NA,Smith et al. 2010,"4.9g/L - in 5mL CGIII media"
+c. glutamicum,s5,cellulose,ethanol,1,NA,Sakai et al. 2007,"1.7M final ethanol concentration. 200mM glucose. That's 78g ethanol and 36g glucose - so I think this is a continuously added fermentation experiment. Abstract says 62-100% productivity so going with that."
+c. glutamicum,s6,cellulose,ethanol,0.486,NA,Jojima et al. 2014,"119g/L ethanol from 245g/L glucose - which is 95% of theoretical maximum."

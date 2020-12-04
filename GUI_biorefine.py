@@ -24,7 +24,7 @@ brf functions used:
 """
 
 
-def make_layout(modValues, mod_units, header=''):
+def main_layout(modValues, mod_units, header=''):
     """
     formats a PySimpleGUI window to be input into PySimple's Window method.
 
@@ -92,6 +92,14 @@ def make_layout(modValues, mod_units, header=''):
                    [sg.Combo(values=mod_units,
                              key='detailOptions', size=(20, 1)),
                     sg.Button('Enter', key='Detail Chosen')], ]
+
+    tab3_layout = [[sg.T('Add Data')],
+
+                   [sg.Text('Add data for:')],
+
+                   [sg.Combo(values=['products', 'materials', 'sides'],
+                             key='detailOptions', size=(20, 1)),
+                    sg.Button('Go', key='Detail Chosen')], ]
 
     layout = [[sg.TabGroup([[sg.Tab('Bioprocess', tab1_layout),
                              sg.Tab('Details', tab2_layout)]])]]
@@ -236,7 +244,7 @@ def main():
             # Here's this line again. What does it do?
             modValues[mod] = cm[mod]['name']
 
-    window = sg.Window('Your Current Bioprocess', make_layout(modValues, mod_units))
+    window = sg.Window('Your Current Bioprocess', main_layout(modValues, mod_units))
 
     while True:  # Event Loop
         event, values = window.read()

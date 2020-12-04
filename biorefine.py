@@ -224,7 +224,7 @@ def get_change(avails, mod, currentMods, flows):
         print('----------------------------------------------------'
               '---------------------------')
         newVal = input('\nEnter new value from above:'
-                       '\n\ncmd: ').strip(' ').lower()
+                       '\n\ncmd: ').strip(' ')
 
         # check if user is trying to delete a sideFlow
         removeSide = mod[0:4] == 'side' and newVal == 'none'
