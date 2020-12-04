@@ -1,0 +1,66 @@
+-------------------------------------------------------------------------------
+cellulose -> acetate -> ecoli_anaerobic -> mdch_fattyacids
+  |  
+corn -> glucose -> yeast_anaerobic -> ethanol
+  |  
+germ -> oil -> thermochemical -> biodiesel
+-------------------------------------------------------------------------------
+
+PRODUCTname: ethanol
+processes: ['c. glutamicum', 'clostridia', 'ecoli', 'ecoli_anaerobic', 'yeast', 'yeast_anaerobic']
+
+PROCESSname: yeast_anaerobic
+substrates: ['glucose']
+products: ['ethanol', 'isobutanol']
+
+glucose*2*ethanol: 
+       ['wt', '0.7', 'NA', 'NA']
+       ['s2', '0.99', 'NA', 'NA']
+       ['wt', '0.6', 'isobutanol/acetone', 'NA']
+       ['wt', '0.8', 'NA', 'NA']
+SUBSTRATEname: glucose
+processes: ['T. fusca', 'c. glutamicum', 'clostridia', 'ecoli', 'ecoli_anaerobic', 'methanogenic', 'yeast', 'yeast_anaerobic']
+materials: ['corn', 'sugar cane', 'wheat']
+
+MATERIALname: corn
+substrate: glucose
+sides: ['cellulose', 'germ']
+comp: [[0.3, 0.6, 0.1], 'cs1']
+yield: ['t1', '2']
+
+SIDE1name: cellulose
+substrates: ['acetate', 'avicel', 'cellulose', 'glucose', 'methane']
+
+SUB1name: acetate
+processes: ['ecoli', 'ecoli_anaerobic', 'yeast']
+materials: ['wastewater']
+
+PROC1name: ecoli_anaerobic
+substrates: ['acetate', 'glucose']
+products: ['ethanol', 'mdch_fattyacids', 'palmitic_acid', 'propane_diol']
+
+acetate*2*mdch_fattyacids: 
+       ['s3', '0.8', 'palmitic_acid', 'NA']
+PROD1name: mdch_fattyacids
+processes: ['ecoli_anaerobic']
+
+BOOST1name: 
+
+SIDE2name: germ
+substrates: ['germ', 'oil']
+
+SUB2name: oil
+processes: ['thermochemical']
+materials: ['algae', 'poplar', 'sunflower']
+
+PROC2name: thermochemical
+substrates: ['ammonia', 'methane', 'oil', 'phosphate']
+products: ['biodiesel', 'cooking_oil', 'fertilizer', 'methanol', 'phosphorus']
+
+oil*2*biodiesel: 
+       ['transesterification', '0.9', 'crude_glycerol', 'NA']
+PROD2name: biodiesel
+processes: ['thermochemical']
+
+BOOST2name: 
+

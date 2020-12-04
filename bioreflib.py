@@ -39,109 +39,6 @@ import sys
 import json
 
 
-def user_build(product, optimization=None, filter=None):
-    """
-    This function builds the "Bioprocess", which is the network of Modular
-    Units and their values. The user only specifies the product, and then the
-    rest of the values are ensured to be "compatible" and then chosen
-    alphabetically. Eventually we want to implement some sort of optimization
-    where it always chooses the "best" value.
-
-    Compatibility of neighboring Modular Units is more complex for some Modular
-    Units than others. For materials, it's jsut a matter of checking that a
-    material exists within the "materials" key of the chosen substrate. For
-    compatability of substrates, processes, and products, we have to check that
-    within that process, it is actually possible to convert the chosen
-    substrate to the specified product, which is described by the "sub2prod"
-    key in the process Unit.
-
-    Parameters
-    -----------
-    product: str, the name of the product you want to build towards
-    optimization: str, which factor you want to optimize for in selecting
-        a bioprocess (IN PROGRESS)
-    filter: str, what you want to filter through in selecting a bioprocess
-        (IN PROGRESS)
-
-    Returns
-    --------
-    a bioprocess map towards that process, which can then be modified.
-
-    """
-    # initialize the bioprocess Modular Units for a specified product
-
-    currentMods = {}  # dictionary of current Modular Unit values
-    dicts = call_json()  # acquire libraries
-    PRODUCTS = dicts['PRODUCTS']  # dictionary of all known products
-    PROCESSES = dicts['PROCESSES']  # dictionary of all known processes
-    SUBSTRATES = dicts['SUBSTRATES']  # dictionary of all known substrates
-    MATERIALS = dicts['MATERIALS']  # dictionary of all known materials
-    SIDES = dicts['SIDES']  # dictionary of all known side materials
-
-    currentMods['product'] = PRODUCTS.get(product)  # update product
-    if optimization is None and filter is None:
-        # no opt or filt specified, choose first available Modular Unit value
-        process = PRODUCTS.get(product)['processes'][0]
-        for key, val in PROCESSES.get(process)['subprods'].items():
-            sub, prod = key.split('*2*')
-            if prod == product:
-                substrate = sub
-                break
-        material = SUBSTRATES.get(substrate)['materials'][0]
-
-        currentMods['process'] = PROCESSES.get(process)
-        currentMods['substrate'] = SUBSTRATES.get(substrate)
-        currentMods['material'] = MATERIALS.get(material)
-
-        # initialize and update sideFlow Modular Unit values, output strings
-        currentMods = replace_sideFlow('side1', currentMods)
-        currentMods = replace_sideFlow('side2', currentMods)
-
-        side1 = MATERIALS.get(material)['sides'][0]
-        try:
-            side2 = MATERIALS.get(material)['sides'][1]
-        except(IndexError):
-            side2 = 'NA'
-
-        # if a by-product exists from the chosen material, populate sideFlow1
-        if side1 != 'NA':
-            sub1 = SIDES.get(side1)['substrates'][0]
-            proc1 = SUBSTRATES.get(sub1)['processes'][0]
-            for key, val in PROCESSES.get(proc1)['subprods'].items():
-                sub, prod = key.split('*2*')
-                if sub == sub1:
-                    prod1 = prod
-                    break
-
-            currentMods['side1'] = SIDES.get(side1)
-            currentMods['sub1'] = SUBSTRATES.get(sub1)
-            currentMods['proc1'] = PROCESSES.get(proc1)
-            currentMods['prod1'] = PRODUCTS.get(prod1)
-
-        # if a second by-product exists, populate sideFlow2
-        if side2 != 'NA':
-            sub2 = SIDES.get(side2)['substrates'][0]
-            proc2 = SUBSTRATES.get(sub2)['processes'][0]
-            for key, val in PROCESSES.get(proc2)['subprods'].items():
-                sub, prod = key.split('*2*')
-                if sub == sub2:
-                    prod2 = prod
-                    break
-
-            currentMods['side2'] = SIDES.get(side2)
-            currentMods['sub2'] = SUBSTRATES.get(sub2)
-            currentMods['proc2'] = PROCESSES.get(proc2)
-            currentMods['prod2'] = PRODUCTS.get(prod2)
-
-        flows = assemble_flows(currentMods)
-    else:
-        # filter available Modular Unit values and optimize decision making
-        print('Optimization and Filtering options coming soon!')
-        sys.exit(0)
-
-    return [flows, currentMods]
-
-
 def user_change(changingMod, newVal, currentMods):
     """
     This function takes a specific Modular Unit to change (see top for Modular
@@ -454,7 +351,6 @@ def check_sides(currentMods,
 
     # check compatability of side1 with new material
     if side1['name'] not in material['sides'] and floNum != 2:
-        print('side1: '+side1['name']+'\nmaterial: '+material['name'])
         sides = material['sides']
         for side in sides:
             if side not in ['NA', substrate['name']]:
@@ -613,23 +509,48 @@ def assemble_flows(currentMods):
 
 
 def print_bioprocess(mainFlow, sideFlow1, sideFlow2):
-    print('-------------------------------------------------------'
-          '------------------------')
-    print(sideFlow1)
-    print('  |  ')
-    print(mainFlow)
-    print('  |  ')
-    print(sideFlow2)
-    print('-------------------------------------------------------'
-          '------------------------')
-    return None
+    biomap = \
+        '-------------------------------------------------------' \
+        '------------------------\n' \
+        + sideFlow1 \
+        + '\n  |  \n' \
+        + mainFlow \
+        + '\n  |  \n' \
+        + sideFlow2 \
+        + '\n-------------------------------------------------------' \
+        '------------------------\n'
+    print(biomap)
+    return biomap
 
 
-def write_bioprocess(currentMods, fileName):
-    # saves current bioprocess to json, eventually write to text
-    with open(fileName, 'w') as f:
+def write_bioprocess(currentMods, mod_units, fileName, biomap):
+    # get appropriate fiel extensions
+    jName, fileName = get_file_ext('.json', fileName)
+    tName, fileName = get_file_ext('.txt', fileName)
+
+    # saves current bioprocess to json and txt files
+    with open(jName, 'w') as f:
         json.dump(currentMods, f)
+
+    with open(tName, 'w') as f:
+        f.write(biomap + '\n')
+        details = []
+        for mod in mod_units:
+            detailText = print_Details(mod, currentMods)
+            f.write(mod.upper())
+            f.write(detailText + '\n')
+
     return None
+
+
+def get_file_ext(ext, fileName):
+    if ext != fileName[-len(ext):]:
+        typeName = ''.join([fileName, ext])
+    else:
+        typeName = fileName
+        fileName = fileName[0:-len(ext)]
+
+    return typeName, fileName
 
 
 def get_avails(mod, mod_units, currentMods):
@@ -678,6 +599,36 @@ def get_avails(mod, mod_units, currentMods):
         return avails
 
 
+def print_Details(mod, currentMods):
+    detailText = ''
+    detailMod = currentMods[mod]
+    for key, val in detailMod.items():
+        if key == 'subprods':
+            # list strain options line by line
+            if mod == 'process':
+                prod = currentMods['product']['name']
+                sub = currentMods['substrate']['name']
+            elif mod == 'proc1':
+                prod = currentMods['prod1']['name']
+                sub = currentMods['sub1']['name']
+            elif mod == 'proc2':
+                prod = currentMods['prod2']['name']
+                sub = currentMods['sub2']['name']
+            key = '*2*'.join([sub, prod])
+            strains = val[key]['strains']
+            detailText += '\n{}: '.format(key)
+            for strain in strains:
+                detailText += '\n       {}'.format(strain)
+
+        elif key == 'treatments':
+            # list treatment options line by line
+            pass
+
+        else:
+            # print field of detailMod
+            detailText += '{}: {}\n'.format(key, val)
+
+    return detailText
 ###############################################################################
 ###############################################################################
 #####################^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^###########################
@@ -897,7 +848,6 @@ def build_materials():
                 side1 = a[2]
                 side2 = a[3]
                 sides = [side1, side2]
-                print(a)
                 c1, c2, c3 = a[4].split('/')
                 comp = [float(c1), float(c2), float(c3)]
                 comp_source = a[5]
@@ -1129,6 +1079,110 @@ def append_results(a, results, result_column):
         sys.exit(1)
 
     return results
+
+
+def user_build(product, optimization=None, filter=None):
+    """
+    ***NO LONGER RELEVANT***
+    This function builds the "Bioprocess", which is the network of Modular
+    Units and their values. The user only specifies the product, and then the
+    rest of the values are ensured to be "compatible" and then chosen
+    alphabetically. Eventually we want to implement some sort of optimization
+    where it always chooses the "best" value.
+
+    Compatibility of neighboring Modular Units is more complex for some Modular
+    Units than others. For materials, it's jsut a matter of checking that a
+    material exists within the "materials" key of the chosen substrate. For
+    compatability of substrates, processes, and products, we have to check that
+    within that process, it is actually possible to convert the chosen
+    substrate to the specified product, which is described by the "sub2prod"
+    key in the process Unit.
+
+    Parameters
+    -----------
+    product: str, the name of the product you want to build towards
+    optimization: str, which factor you want to optimize for in selecting
+        a bioprocess (IN PROGRESS)
+    filter: str, what you want to filter through in selecting a bioprocess
+        (IN PROGRESS)
+
+    Returns
+    --------
+    a bioprocess map towards that process, which can then be modified.
+
+    """
+    # initialize the bioprocess Modular Units for a specified product
+
+    currentMods = {}  # dictionary of current Modular Unit values
+    dicts = call_json()  # acquire libraries
+    PRODUCTS = dicts['PRODUCTS']  # dictionary of all known products
+    PROCESSES = dicts['PROCESSES']  # dictionary of all known processes
+    SUBSTRATES = dicts['SUBSTRATES']  # dictionary of all known substrates
+    MATERIALS = dicts['MATERIALS']  # dictionary of all known materials
+    SIDES = dicts['SIDES']  # dictionary of all known side materials
+
+    currentMods['product'] = PRODUCTS.get(product)  # update product
+    if optimization is None and filter is None:
+        # no opt or filt specified, choose first available Modular Unit value
+        process = PRODUCTS.get(product)['processes'][0]
+        for key, val in PROCESSES.get(process)['subprods'].items():
+            sub, prod = key.split('*2*')
+            if prod == product:
+                substrate = sub
+                break
+        material = SUBSTRATES.get(substrate)['materials'][0]
+
+        currentMods['process'] = PROCESSES.get(process)
+        currentMods['substrate'] = SUBSTRATES.get(substrate)
+        currentMods['material'] = MATERIALS.get(material)
+
+        # initialize and update sideFlow Modular Unit values, output strings
+        currentMods = replace_sideFlow('side1', currentMods)
+        currentMods = replace_sideFlow('side2', currentMods)
+
+        side1 = MATERIALS.get(material)['sides'][0]
+        try:
+            side2 = MATERIALS.get(material)['sides'][1]
+        except(IndexError):
+            side2 = 'NA'
+
+        # if a by-product exists from the chosen material, populate sideFlow1
+        if side1 != 'NA':
+            sub1 = SIDES.get(side1)['substrates'][0]
+            proc1 = SUBSTRATES.get(sub1)['processes'][0]
+            for key, val in PROCESSES.get(proc1)['subprods'].items():
+                sub, prod = key.split('*2*')
+                if sub == sub1:
+                    prod1 = prod
+                    break
+
+            currentMods['side1'] = SIDES.get(side1)
+            currentMods['sub1'] = SUBSTRATES.get(sub1)
+            currentMods['proc1'] = PROCESSES.get(proc1)
+            currentMods['prod1'] = PRODUCTS.get(prod1)
+
+        # if a second by-product exists, populate sideFlow2
+        if side2 != 'NA':
+            sub2 = SIDES.get(side2)['substrates'][0]
+            proc2 = SUBSTRATES.get(sub2)['processes'][0]
+            for key, val in PROCESSES.get(proc2)['subprods'].items():
+                sub, prod = key.split('*2*')
+                if sub == sub2:
+                    prod2 = prod
+                    break
+
+            currentMods['side2'] = SIDES.get(side2)
+            currentMods['sub2'] = SUBSTRATES.get(sub2)
+            currentMods['proc2'] = PROCESSES.get(proc2)
+            currentMods['prod2'] = PRODUCTS.get(prod2)
+
+        flows = assemble_flows(currentMods)
+    else:
+        # filter available Modular Unit values and optimize decision making
+        print('Optimization and Filtering options coming soon!')
+        sys.exit(0)
+
+    return [flows, currentMods]
 
 
 if __name__ == '__main__':
