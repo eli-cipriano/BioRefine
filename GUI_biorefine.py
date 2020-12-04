@@ -1,6 +1,7 @@
 import sys
 import PySimpleGUI as sg
 import bioreflib as brf
+import json
 
 """
 This code can be run in a pysimple trinket.io
@@ -46,7 +47,7 @@ def main_layout(modValues, mod_units, header=''):
     divider = '---------------------------------------------------------------'\
         '---------------------------------------------------------------'
     spacer = '                                                                '\
-        '                                                       '
+        '                                                '
 
     # Set up the buttons.
     # Then add text for the results.
@@ -82,6 +83,7 @@ def main_layout(modValues, mod_units, header=''):
                     sg.Button('Apply Change')],
 
                    [sg.Text(spacer),
+                    sg.Button('Load Preset', key='load'),
                     sg.Button('Save & Quit', key='exit')]
                    ]
 
@@ -97,12 +99,13 @@ def main_layout(modValues, mod_units, header=''):
 
                    [sg.Text('Add data for:')],
 
-                   [sg.Combo(values=['products', 'materials', 'sides'],
-                             key='detailOptions', size=(20, 1)),
+                   [sg.Combo(values=['mat2sub', 'side2sub', 'sub2prod'],
+                             key='new_mod', size=(20, 1)),
                     sg.Button('Go', key='Detail Chosen')], ]
 
     layout = [[sg.TabGroup([[sg.Tab('Bioprocess', tab1_layout),
-                             sg.Tab('Details', tab2_layout)]])]]
+                             sg.Tab('Details', tab2_layout),
+                             sg.Tab('Custom', tab3_layout)]])]]
 
     return layout
 
@@ -151,14 +154,42 @@ def callback_ApplyChange(window, newVal):
 
     Returns
     -------------
-
     """
-    # Why is there are values and value? Why are both empty? #
+    # set values and value to empty to get rid of previously specified answers
     window['changeMod'].update('Change ___:')
     window['changeOptions'].update(values=[''])
     window['changeOptions'].update(value='')
-    # clearwindow['header'].update('Changed to {}...'.format(newVal))
-    return newVal  # where does newVal go?
+
+    return newVal
+
+
+def callback_LoadMap(fileName=None):
+    """
+    Allows user to load in a previously saved bioprocess
+    """
+    loading_msg = 'Load Bioprocess:'\
+        '\n(will check processes/ by default)'
+
+    # get fileName from user
+    if not fileName:
+        fileName = sg.popup_get_text(loading_msg, 'File Loader')
+
+    if fileName:
+        # add default path and .json ext
+        fileName = brf.default_path(fileName)
+        jName, fileName = brf.get_file_ext('.json', fileName)
+        # attempt to load in specified json
+        try:
+            with open(jName) as j:
+                currentMods = json.load(j)
+        except(FileNotFoundError):
+            sg.popup('Error: File could not be opened')
+            currentMods = None
+
+    else:
+        currentMods = 'cancel'
+
+    return currentMods
 
 
 def callback_UpdateMap(cm, mod_units, window):
@@ -171,11 +202,16 @@ def callback_UpdateMap(cm, mod_units, window):
 
 
 def callback_Save():
-    fileName = sg.popup_get_text('Save Bioprocess As:', 'File Saver')
+    saving_msg = 'Save Bioprocess As:'\
+        '\n(will save in processes/ by default)'
+    fileName = sg.popup_get_text(saving_msg, 'File Saver')
+
     if fileName:
+        # read filename and add default path
         fileName = fileName.strip(' ')
-        if 'json' not in fileName.split('.'):
-            fileName = ''.join([fileName, '.json'])
+        fileName = brf.default_path(fileName)
+
+    # if user does not input a fileName
     elif fileName is None:
         fileName = 'cancel'
     elif fileName == '':
@@ -183,57 +219,34 @@ def callback_Save():
     return fileName
 
 
-def callback_Details(detailMod, mod, currentMods):
+def callback_Details(mod, currentMods):
     """
     sub function for receiving input from user on which module they would like
     to view detailed properties of.
     """
-    detailText = print_Details(detailMod, mod, currentMods)
+    detailMod = currentMods[mod]
+    detailText = brf.print_Details(mod, currentMods)
     detailPopup = sg.popup(detailText)
-
-
-def print_Details(detailMod, mod, currentMods):
-    detailText = ''
-    for key, val in detailMod.items():
-        if key == 'subprods':
-            # list strain options line by line
-            if mod == 'process':
-                prod = currentMods['product']['name']
-                sub = currentMods['substrate']['name']
-            elif mod == 'proc1':
-                prod = currentMods['prod1']['name']
-                sub = currentMods['sub1']['name']
-            elif mod == 'proc2':
-                prod = currentMods['prod2']['name']
-                sub = currentMods['sub2']['name']
-            key = '2'.join([sub, prod])
-            strains = val[key]['strains']
-            detailText += '\n{}: '.format(key)
-            for strain in strains:
-                detailText += '\n       {}'.format(strain)
-
-        elif key == 'treatments':
-            # list treatment options line by line
-            pass
-
-        else:
-            # print field of detailMod
-            detailText += '{}: {}\n'.format(key, val)
-
-    return detailText
 
 
 def main():
     # initialize the bioprocess with default values
-    output = brf.user_build('ethanol',
-                            optimization=None,
-                            filter=None
-                            )
-    cm = output[1]
+    try:
+        cm = callback_LoadMap(fileName='.startup_DO-NOT-DELETE')
+
+        if cm is None:
+            raise FileNotFoundError
+
+        # "change" cm so that the flows can also be initialized
+        flows, cm = brf.user_change('prod2', cm['prod2']['name'], cm)
+
+    except(FileNotFoundError):
+        sg.popup('WARNING: No startup process detected.\nMaking new default.')
+        flows, cm = brf.create_default()
+
+    # After initializing:
     # make a list of all the module names
-    mod_units = ['product', 'process', 'substrate', 'material',
-                 'side1', 'sub1', 'proc1', 'prod1', 'boost1',
-                 'side2', 'sub2', 'proc2', 'prod2', 'boost2']
+    mod_units = brf.get_mod_units()
     # store current module values for updating button names
     modValues = {}
     # to begin, no module is specified for change
@@ -246,7 +259,11 @@ def main():
 
     window = sg.Window('Your Current Bioprocess', main_layout(modValues, mod_units))
 
-    while True:  # Event Loop
+    ###########################################################################
+    # Event Loop
+    ###########################################################################
+
+    while True:
         event, values = window.read()
         try:
             # check that conditions are met for input actions
@@ -260,8 +277,7 @@ def main():
 
         elif event == 'Apply Change' and canApply:
             newVal = callback_ApplyChange(window, values['changeOptions'])
-            output = brf.user_change(changingMod, newVal, cm)
-            cm = output[1]
+            flows, cm = brf.user_change(changingMod, newVal, cm)
             callback_UpdateMap(cm, mod_units, window)
             changingMod = None
 
@@ -273,8 +289,15 @@ def main():
 
         elif event == 'Detail Chosen' and canDetail:
             mod = values['detailOptions']
-            detailMod = cm[mod]
-            callback_Details(detailMod, mod, cm)
+            callback_Details(mod, cm)
+
+        elif event == 'load':
+            new_cm = callback_LoadMap()
+            if new_cm == 'cancel':
+                pass
+            elif new_cm is not None:
+                cm = new_cm
+                callback_UpdateMap(cm, mod_units, window)
 
         elif event == 'exit':
             fileName = callback_Save()
@@ -285,8 +308,11 @@ def main():
                 break
             else:
                 window.close()
-                brf.print_bioprocess(output[0][0], output[0][1], output[0][2])
-                brf.write_bioprocess(cm, fileName)
+                biomap = brf.print_bioprocess(flows[0], flows[1], flows[2])
+                brf.write_bioprocess(cm,
+                                     fileName,
+                                     mod_units=mod_units,
+                                     biomap=biomap)
                 break
 
 

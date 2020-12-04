@@ -1,0 +1,65 @@
+-------------------------------------------------------------------------------
+cellulose -> acetate -> ecoli -> P3HB
+  |  
+corn -> cellulose -> c. glutamicum -> ethanol
+  |  
+germ -> germ -> mechanical -> feed
+-------------------------------------------------------------------------------
+
+PRODUCTname: ethanol
+processes: ['c. glutamicum', 'clostridia', 'ecoli', 'ecoli_anaerobic', 'yeast', 'yeast_anaerobic']
+
+PROCESSname: c. glutamicum
+substrates: ['cellulose', 'glucose']
+products: ['1-2-propanediol', 'ethanol', 'hydroxypropionic acid', 'isobutanol']
+
+cellulose*2*ethanol: 
+       ['s7', '0.32', 'NA', 'Ha et al. 2011']
+       ['s5', 1, 'NA', 'Sakai et al. 2007']
+       ['s6', '0.486', 'NA', 'Jojima et al. 2014']
+SUBSTRATEname: cellulose
+processes: ['C. cellulyticum', 'T. fusca', 'c. glutamicum', 'ecoli', 'yeast']
+materials: ['corn', 'paper', 'poplar', 'sugar cane', 'sunflower', 'switchgrass']
+
+MATERIALname: corn
+substrate: glucose
+sides: ['cellulose', 'germ']
+comp: [[0.3, 0.6, 0.1], 'cs1']
+yield: ['t1', '2']
+
+SIDE1name: cellulose
+substrates: ['acetate', 'avicel', 'cellulose', 'glucose', 'methane']
+
+SUB1name: acetate
+processes: ['ecoli', 'ecoli_anaerobic', 'yeast']
+materials: ['wastewater']
+
+PROC1name: ecoli
+substrates: ['acetate', 'cellulose', 'glucose', 'glycerol']
+products: ['1-butanol', '1-propanol', 'D-limonene', 'P3HB', 'diterpenes', 'ethanol', 'farnesyl acetate', 'isobutyl acetate']
+
+acetate*2*P3HB: 
+       ['s10', '0.2', 'P(3HB-co-5.79 mol% 4HB)', 'Chen et al. 2018']
+PROD1name: P3HB
+processes: ['ecoli']
+
+BOOST1name: 
+
+SIDE2name: germ
+substrates: ['germ', 'oil']
+
+SUB2name: germ
+processes: ['mechanical']
+materials: ['algae', 'corn', 'wheat']
+
+PROC2name: mechanical
+substrates: ['germ']
+products: ['feed']
+
+germ*2*feed: 
+       ['milling', '0.9', 'NA', 'NA']
+PROD2name: feed
+processes: ['mechanical']
+
+BOOST2name: 
+
