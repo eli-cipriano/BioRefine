@@ -99,7 +99,7 @@ def main_layout(modValues, mod_units, header=''):
 
                    [sg.Text('Add data for:')],
 
-                   [sg.Combo(values=mod_units,
+                   [sg.Combo(values=['mat2sub', 'side2sub', 'sub2prod'],
                              key='new_mod', size=(20, 1)),
                     sg.Button('Go', key='Detail Chosen')], ]
 
@@ -173,16 +173,22 @@ def callback_LoadMap(fileName=None):
     # get fileName from user
     if not fileName:
         fileName = sg.popup_get_text(loading_msg, 'File Loader')
-    # add default path and .json ext
-    fileName = default_path(fileName)
-    jName, fileName = brf.get_file_ext('.json', fileName)
-    # attempt to load in specified json
-    try:
-        with open(jName) as j:
-            currentMods = json.load(j)
-    except(FileNotFoundError):
-        sg.popup('Error: File could not be opened')
-        currentMods = None
+
+    if fileName:
+        # add default path and .json ext
+        fileName = brf.default_path(fileName)
+        jName, fileName = brf.get_file_ext('.json', fileName)
+        # attempt to load in specified json
+        try:
+            with open(jName) as j:
+                currentMods = json.load(j)
+        except(FileNotFoundError):
+            sg.popup('Error: File could not be opened')
+            currentMods = None
+
+    else:
+        currentMods = 'cancel'
+
     return currentMods
 
 
@@ -203,7 +209,7 @@ def callback_Save():
     if fileName:
         # read filename and add default path
         fileName = fileName.strip(' ')
-        fileName = default_path(fileName)
+        fileName = brf.default_path(fileName)
 
     # if user does not input a fileName
     elif fileName is None:
@@ -213,34 +219,34 @@ def callback_Save():
     return fileName
 
 
-def callback_Details(detailMod, mod, currentMods):
+def callback_Details(mod, currentMods):
     """
     sub function for receiving input from user on which module they would like
     to view detailed properties of.
     """
-    detailText = brf.print_Details(detailMod, mod, currentMods)
+    detailMod = currentMods[mod]
+    detailText = brf.print_Details(mod, currentMods)
     detailPopup = sg.popup(detailText)
-
-
-def default_path(fileName):
-    """
-    sub function for reading file paths, determining whether a path was
-    specified or just the file name (in default "processes" path)
-    """
-    noPath = '/' not in fileName or '\\' not in fileName
-    if noPath:
-        fileName = ''.join(['processes/', fileName])
-    return fileName
 
 
 def main():
     # initialize the bioprocess with default values
-    cm = callback_LoadMap(fileName='example_ethanol')
+    try:
+        cm = callback_LoadMap(fileName='.startup_DO-NOT-DELETE')
 
+        if cm is None:
+            raise FileNotFoundError
+
+        # "change" cm so that the flows can also be initialized
+        flows, cm = brf.user_change('prod2', cm['prod2']['name'], cm)
+
+    except(FileNotFoundError):
+        sg.popup('WARNING: No startup process detected.\nMaking new default.')
+        flows, cm = brf.create_default()
+
+    # After initializing:
     # make a list of all the module names
-    mod_units = ['product', 'process', 'substrate', 'material',
-                 'side1', 'sub1', 'proc1', 'prod1', 'boost1',
-                 'side2', 'sub2', 'proc2', 'prod2', 'boost2']
+    mod_units = brf.get_mod_units()
     # store current module values for updating button names
     modValues = {}
     # to begin, no module is specified for change
@@ -271,8 +277,7 @@ def main():
 
         elif event == 'Apply Change' and canApply:
             newVal = callback_ApplyChange(window, values['changeOptions'])
-            output = brf.user_change(changingMod, newVal, cm)
-            cm = output[1]
+            flows, cm = brf.user_change(changingMod, newVal, cm)
             callback_UpdateMap(cm, mod_units, window)
             changingMod = None
 
@@ -288,7 +293,9 @@ def main():
 
         elif event == 'load':
             new_cm = callback_LoadMap()
-            if new_cm is not None:
+            if new_cm == 'cancel':
+                pass
+            elif new_cm is not None:
                 cm = new_cm
                 callback_UpdateMap(cm, mod_units, window)
 
@@ -301,11 +308,11 @@ def main():
                 break
             else:
                 window.close()
-                biomap = brf.print_bioprocess(output[0][0], output[0][1], output[0][2])
+                biomap = brf.print_bioprocess(flows[0], flows[1], flows[2])
                 brf.write_bioprocess(cm,
-                                     mod_units,
                                      fileName,
-                                     biomap)
+                                     mod_units=mod_units,
+                                     biomap=biomap)
                 break
 
 

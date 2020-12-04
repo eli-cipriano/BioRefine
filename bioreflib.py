@@ -39,6 +39,13 @@ import sys
 import json
 
 
+def get_mod_units():
+    mod_units = ['product', 'process', 'substrate', 'material',
+                 'side1', 'sub1', 'proc1', 'prod1', 'boost1',
+                 'side2', 'sub2', 'proc2', 'prod2', 'boost2']
+    return mod_units
+
+
 def user_change(changingMod, newVal, currentMods):
     """
     This function takes a specific Modular Unit to change (see top for Modular
@@ -266,7 +273,7 @@ def user_change(changingMod, newVal, currentMods):
     # assemble bioprocess into string-pattern
     flows = assemble_flows(currentMods)
 
-    return [flows, currentMods]
+    return flows, currentMods
 
 
 ######################## "CHECK" Helper Functions ##############################
@@ -523,8 +530,9 @@ def print_bioprocess(mainFlow, sideFlow1, sideFlow2):
     return biomap
 
 
-def write_bioprocess(currentMods, mod_units, fileName, biomap):
+def write_bioprocess(currentMods, fileName, mod_units=None, biomap=None):
     # get appropriate fiel extensions
+    fileName = default_path(fileName)
     jName, fileName = get_file_ext('.json', fileName)
     tName, fileName = get_file_ext('.txt', fileName)
 
@@ -532,13 +540,14 @@ def write_bioprocess(currentMods, mod_units, fileName, biomap):
     with open(jName, 'w') as f:
         json.dump(currentMods, f)
 
-    with open(tName, 'w') as f:
-        f.write(biomap + '\n')
-        details = []
-        for mod in mod_units:
-            detailText = print_Details(mod, currentMods)
-            f.write(mod.upper())
-            f.write(detailText + '\n')
+    if mod_units and biomap:
+        with open(tName, 'w') as f:
+            f.write(biomap + '\n')
+            details = []
+            for mod in mod_units:
+                detailText = print_Details(mod, currentMods)
+                f.write(mod.upper() + '\n')
+                f.write(detailText + '\n')
 
     return None
 
@@ -551,6 +560,17 @@ def get_file_ext(ext, fileName):
         fileName = fileName[0:-len(ext)]
 
     return typeName, fileName
+
+
+def default_path(fileName):
+    """
+    sub function for reading file paths, determining whether a path was
+    specified or just the file name (in default "processes" path)
+    """
+    noPath = '/' not in fileName or '\\' not in fileName
+    if noPath:
+        fileName = ''.join(['processes/', fileName])
+    return fileName
 
 
 def get_avails(mod, mod_units, currentMods):
@@ -629,10 +649,32 @@ def print_Details(mod, currentMods):
             detailText += '{}: {}\n'.format(key, val)
 
     return detailText
+
+
+def create_default():
+
+    flows, cm = user_build('ethanol')
+    flows, cm = user_change('process', 'yeast_anaerobic', cm)
+    flows, cm = user_change('proc1', 'ecoli_anaerobic', cm)
+    flows, cm = user_change('sub2', 'oil', cm)
+    flows, cm = user_change('prod2', 'biodiesel', cm)
+
+    mod_units = get_mod_units()
+
+    mainFlow, sideFlow1, sideFlow2 = flows[:]
+    biomap = print_bioprocess(mainFlow, sideFlow1, sideFlow2)
+
+    write_bioprocess(cm,
+                     '.startup_DO-NOT-DELETE',
+                     mod_units=mod_units,
+                     biomap=biomap)
+
+    return flows, cm
+
 ###############################################################################
 ###############################################################################
 #####################^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^###########################
-#################### Functions for Making/Editing UI ##########################
+#################### Functions for Making/Editing BP ##########################
 ###############################################################################
 ###############################################################################
 ###############################################################################
@@ -1182,7 +1224,7 @@ def user_build(product, optimization=None, filter=None):
         print('Optimization and Filtering options coming soon!')
         sys.exit(0)
 
-    return [flows, currentMods]
+    return flows, currentMods
 
 
 if __name__ == '__main__':
