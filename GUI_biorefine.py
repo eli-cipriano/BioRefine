@@ -209,7 +209,6 @@ def callback_Save():
     if fileName:
         # read filename and add default path
         fileName = fileName.strip(' ')
-        fileName = brf.default_path(fileName)
 
     # if user does not input a fileName
     elif fileName is None:
