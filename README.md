@@ -23,3 +23,8 @@ Our goal with Biorefine is to show how a single crop, such as corn, can be used 
 - **product**:    the desired fuel, material, or chemical to be sold, either as a commodity (energy, plastic) or specialty (cosmetic, nutriceutical) product. *(same for prod1/2)*
 
 Considering these terms, which we refer to as "Modular Units" of the bioprocess, our program returns a combination of these Units that can be altered by the user into any possible combination. The available options the user can choose from are selected from a curated list of all the reported biotechnology relating to that specific Unit. For example, if the user were to select "corn" from the ethanol process below, they could change the **material** Modular Unit to be "sugar cane" or "wheat", because these are two other crops that have been reported to produce glucose as their main substrate. Similarly, the list of available values under the **process** Modular Unit only contains classes of biological fermentations that have been reported for the currently selected **product** Modular Unit, which in this case is "ethanol". 
+
+## How to Run This Code
+Example run code: 
+
+```python biorefine.py --product ethanol --file J1```
