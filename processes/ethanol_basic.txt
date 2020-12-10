@@ -1,0 +1,64 @@
+-------------------------------------------------------------------------------
+
+  |  
+corn -> glucose -> yeast_anaerobic -> ethanol
+  |  
+
+-------------------------------------------------------------------------------
+
+PRODUCT
+name: ethanol
+processes: ['c. glutamicum', 'clostridia', 'ecoli', 'ecoli_anaerobic', 'yeast', 'yeast_anaerobic']
+
+PROCESS
+name: yeast_anaerobic
+substrates: ['glucose']
+products: ['ethanol', 'isobutanol']
+
+glucose*2*ethanol: 
+       ['wt', '0.7', 'NA', 'NA']
+       ['s2', '0.99', 'NA', 'NA']
+       ['wt', '0.6', 'isobutanol/acetone', 'NA']
+       ['wt', '0.8', 'NA', 'NA']
+SUBSTRATE
+name: glucose
+processes: ['T. fusca', 'c. glutamicum', 'clostridia', 'ecoli', 'ecoli_anaerobic', 'methanogenic', 'yeast', 'yeast_anaerobic']
+materials: ['corn', 'sugar cane', 'wheat']
+
+MATERIAL
+name: corn
+substrate: glucose
+sides: ['cellulose', 'germ', 'none']
+comp: [[0.3, 0.6, 0.1], 'cs1']
+yield: ['t1', '2']
+
+SIDE1
+name: 
+
+SUB1
+name: 
+
+PROC1
+name: 
+
+PROD1
+name: 
+
+BOOST1
+name: 
+
+SIDE2
+name: 
+
+SUB2
+name: 
+
+PROC2
+name: 
+
+PROD2
+name: 
+
+BOOST2
+name: 
+

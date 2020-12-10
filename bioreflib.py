@@ -566,7 +566,7 @@ def default_path(fileName):
     sub function for reading file paths, determining whether a path was
     specified or just the file name (in default "processes" path)
     """
-    noPath = '/' not in fileName or '\\' not in fileName
+    noPath = '/' not in fileName and '\\' not in fileName
     if noPath:
         fileName = ''.join(['processes/', fileName])
     return fileName

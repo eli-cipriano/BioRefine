@@ -77,7 +77,7 @@ def main_layout(modValues, mod_units, header=''):
 
                    [sg.Text(divider, key='changeTEXT')],
 
-                   [sg.Text('Change ____:', key='changeMod')],
+                   [sg.Text('Change ____:                  ', key='changeMod')],
 
                    [sg.Combo(values=[''], key='changeOptions', size=(20, 1)),
                     sg.Button('Apply Change')],
@@ -87,27 +87,45 @@ def main_layout(modValues, mod_units, header=''):
                     sg.Button('Save & Quit', key='exit')]
                    ]
 
-    tab2_layout = [[sg.T('Get Details')],
+    tab2_layout = [[sg.T(' ')],
 
                    [sg.Text('See details for:')],
 
                    [sg.Combo(values=mod_units,
                              key='detailOptions', size=(20, 1)),
-                    sg.Button('Enter', key='Detail Chosen')], ]
+                    sg.Button('Enter', key='Detail Chosen')]]
 
-    tab3_layout = [[sg.T('Add Data')],
+    # TRY TO UPDATE TAB2 TEXT INSTEAD OF USING A POPUP
+    # [sg.Text('Details for _______:       \n\n\n\n\n\n\n\n\n\n\n',
+    #          key='detailText')]]
 
-                   [sg.Text('Add data for:')],
+    tab3_layout = [[sg.T(' ')],
 
-                   [sg.Combo(values=['mat2sub', 'side2sub', 'sub2prod'],
+                   [sg.Text('Select conversion type:')],
+
+                   [sg.Combo(values=['material', 'side', 'substrate'],
                              key='new_mod', size=(20, 1)),
-                    sg.Button('Go', key='Detail Chosen')], ]
+                    sg.Button('Launch', key='Detail Chosen')], ]
 
     layout = [[sg.TabGroup([[sg.Tab('Bioprocess', tab1_layout),
                              sg.Tab('Details', tab2_layout),
                              sg.Tab('Custom', tab3_layout)]])]]
 
     return layout
+
+
+def data_addition_layout(entry_type):
+    """
+    Allow users to add their own data entries
+    """
+
+    if entry_type == 'material':
+        sg.popup('material')
+    elif entry_type == 'side':
+        sg.popup('side')
+    elif entry_type == 'substrate':
+        sg.popup('substrate')
+    return None
 
 
 def callback_UserChange(changingMod, avails, currentMods, window):
@@ -218,14 +236,15 @@ def callback_Save():
     return fileName
 
 
-def callback_Details(mod, currentMods):
+def callback_Details(mod, currentMods, window):
     """
     sub function for receiving input from user on which module they would like
     to view detailed properties of.
     """
     detailMod = currentMods[mod]
     detailText = brf.print_Details(mod, currentMods)
-    detailPopup = sg.popup(detailText)
+    sg.popup(detailText)
+    # window['detailText'].update('Details for {}:\n{}'.format(mod, detailText))
 
 
 def main():
@@ -288,7 +307,7 @@ def main():
 
         elif event == 'Detail Chosen' and canDetail:
             mod = values['detailOptions']
-            callback_Details(mod, cm)
+            callback_Details(mod, cm, window)
 
         elif event == 'load':
             new_cm = callback_LoadMap()
