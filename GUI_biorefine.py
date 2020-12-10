@@ -47,12 +47,11 @@ def main_layout(modValues, mod_units, header=''):
     divider = '---------------------------------------------------------------'\
         '---------------------------------------------------------------'
     spacer = '                                                                '\
-        '                                                '
+        '                                                                     '
 
-    # Set up the buttons.
-    # Then add text for the results.
+    tab1_layout = [[sg.Text(spacer+'                         '),
+                    sg.Button('Help', key='bioprocess_help')],
 
-    tab1_layout = [[sg.Text(header, key='header')],
                    [sg.Button(modValues['side1'], key='side1'), sg.Text(' --> '),
                     sg.Button(modValues['sub1'], key='sub1'), sg.Text(' --> '),
                     sg.Button(modValues['proc1'], key='proc1'), sg.Text(' --> '),
@@ -77,17 +76,22 @@ def main_layout(modValues, mod_units, header=''):
 
                    [sg.Text(divider, key='changeTEXT')],
 
+                   # add spaces to prevent disappearing-text bug
                    [sg.Text('Change ____:                  ', key='changeMod')],
 
                    [sg.Combo(values=[''], key='changeOptions', size=(20, 1)),
                     sg.Button('Apply Change')],
 
+                   [sg.Text('\n\n\n')],
+
                    [sg.Text(spacer),
                     sg.Button('Load Preset', key='load'),
                     sg.Button('Save & Quit', key='exit')]
+
                    ]
 
-    tab2_layout = [[sg.T(' ')],
+    tab2_layout = [[sg.T(spacer+'                         '),
+                    sg.Button('Help', key='details_help')],
 
                    [sg.Text('See details for:')],
 
@@ -95,11 +99,13 @@ def main_layout(modValues, mod_units, header=''):
                              key='detailOptions', size=(20, 1)),
                     sg.Button('Enter', key='Detail Chosen')]]
 
+    # TODO:
     # TRY TO UPDATE TAB2 TEXT INSTEAD OF USING A POPUP
     # [sg.Text('Details for _______:       \n\n\n\n\n\n\n\n\n\n\n',
     #          key='detailText')]]
 
-    tab3_layout = [[sg.T(' ')],
+    tab3_layout = [[sg.T(spacer+'                         '),
+                    sg.Button('Help', key='custom_help')],
 
                    [sg.Text('Select conversion type:')],
 
@@ -247,6 +253,44 @@ def callback_Details(mod, currentMods, window):
     # window['detailText'].update('Details for {}:\n{}'.format(mod, detailText))
 
 
+def callback_PrintHelp(help_type):
+    """
+    sub function for printing help documentation
+    """
+    if help_type == 'bioprocess':
+        help_msg = 'Click a button to set which Modular Unit you would like to'\
+            + ' change. Then select an option from the drop-down menu. Options will'\
+            + ' only be available if they are compatible with neighboring Modular'\
+            + ' Units. You can only change one Modular Unit at a time.\n'\
+            + ' ------------------------------------------------------\n'\
+            + ' Use the "Load" button to change the current map to a previously saved'\
+            + ' Bioprocess. Use the "Save & Quit" button to save your current map.\n\n'\
+            + ' * Files will automatically be saved/loaded to/from the processes/'\
+            + ' directory, unless otherwise stated in the file path name.\n\n'\
+            + ' *The file will save and load JSON files automatically, so do not'\
+            + ' your own file extension.\n\n'\
+            + ' *When quitting, press OK with no file name to exit without saving.'\
+            + ' You can also close the window at any point to exit without saving.'\
+
+    elif help_type == 'details':
+        help_msg = 'Click which Modular Unit you want to see more detailed'\
+            + ' information about. This information will also be written to a text'\
+            + ' file upon saving.'
+
+    elif help_type == 'custom':
+        help_msg = 'Click which data type you would like to add to.\n\n'\
+            + ' *Materials refer to information on converting raw biomass into'\
+            + ' substrate compounds.\n\n'\
+            + ' *Sides refer to information on converting by-products of materials'\
+            + ' into useful substrates as well.\n\n'\
+            + ' *Substrates refer to information on converting basic compounds into'\
+            + ' more valuable and refined products.'
+
+    help_window = sg.popup(help_msg)
+
+    return None
+
+
 def main():
     # initialize the bioprocess with default values
     try:
@@ -316,6 +360,10 @@ def main():
             elif new_cm is not None:
                 cm = new_cm
                 callback_UpdateMap(cm, mod_units, window)
+
+        elif 'help' in event:
+            help_type = event.split('_')
+            callback_PrintHelp(help_type[0])
 
         elif event == 'exit':
             fileName = callback_Save()
