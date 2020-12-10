@@ -277,6 +277,13 @@ def user_change(changingMod, newVal, currentMods):
 
 
 ######################## "CHECK" Helper Functions ##############################
+"""
+The following "check" functions are used in the user_change function to make
+sure the Modular Unit values comprise a real, feasable bioprocess. This is done
+by referencing the datasets describing the conversion of three types of Modular
+Units: materials, sides, and substrates (stored in .biorefine/data and written
+by brf functions).
+"""
 
 
 def check_process(currentMods,
@@ -464,11 +471,30 @@ def check_prods(currentMods,
 
     return changingMod, newVal
 
+################################################################################
+
 
 ############################## Helper Functions ################################
+"""
+These functions are used for various procedures throughout the GUI program and
+this library.
+"""
 
 
 def replace_sideFlow(side, currentMods):
+    """
+    Helper function for erasing current sideFlow Modular units
+
+    Parameters
+    -------------
+    side = str, should be "side1" or "side2"
+
+    currentMods = dictionary, Current Modular Units of bioprocess
+
+    Returns
+    -------------
+    currentMods
+    """
     # initialize or reset values for sideFlows
     if side == 'side1':
         currentMods['side1'] = {'name': ''}
@@ -486,6 +512,18 @@ def replace_sideFlow(side, currentMods):
 
 
 def assemble_flows(currentMods):
+    """
+    Helper function for building the process diagram, or "biomap" for output to
+    the text file.
+
+    Parameters
+    -------------
+    currentMods = dictionary, Current Modular Units of bioprocess
+
+    Returns
+    -------------
+    [flows] = a list of the 3 flows shown in the "biomap"
+    """
     ts = ' -> '  # transition string
     product = currentMods['product']['name']
     process = currentMods['process']['name']
@@ -515,6 +553,19 @@ def assemble_flows(currentMods):
 
 
 def print_bioprocess(mainFlow, sideFlow1, sideFlow2):
+    """
+    Helper function for printing the 3 flows to std out and to the "biomap" var
+
+    Parameters
+    -------------
+    side = str, should be "side1" or "side2"
+
+    currentMods = dictionary, Current Modular Units of bioprocess
+
+    Returns
+    -------------
+    currentMods
+    """
     biomap = \
         '-------------------------------------------------------' \
         '------------------------\n' \
@@ -530,15 +581,41 @@ def print_bioprocess(mainFlow, sideFlow1, sideFlow2):
 
 
 def write_bioprocess(currentMods, fileName, mod_units=None, biomap=None):
+    """
+    Helper function for saving the bioprocess, both to JSON and text file.
+    These two file types are for loading presaved biomaps into the program
+    (JSON) and for viewing a write-up of the bioprocess (text).
+
+    The function uses other helper functions to determine where the files are
+    to be saved as well as to ensure the proper file type is saved.
+
+    Parameters
+    -------------
+    currentMods = dictionary, Current Modular Units of bioprocess
+
+    fileName = str, path to file. Can include custom directory, uses processes/
+                by default.
+
+    mod_units = list of str, list of Modular Unit names
+
+    biomap = str, output from print_bioprocess, which assembles the flow strings
+                into the diagram referred to as the "biomap"
+
+    Returns
+    -------------
+    None
+    """
     # get appropriate fiel extensions
     fileName = default_path(fileName)
     jName, fileName = get_file_ext('.json', fileName)
     tName, fileName = get_file_ext('.txt', fileName)
 
     # saves current bioprocess to json and txt files
+    # also used to create a startup file in the case that the start up is missing
     with open(jName, 'w') as f:
         json.dump(currentMods, f)
 
+    # if both variables are passed in, then write the text file.
     if mod_units and biomap:
         with open(tName, 'w') as f:
             f.write(biomap + '\n')
@@ -552,19 +629,42 @@ def write_bioprocess(currentMods, fileName, mod_units=None, biomap=None):
 
 
 def get_file_ext(ext, fileName):
-    if ext != fileName[-len(ext):]:
+    """
+    Helper function for making sure the correct file ending is appended.
+
+    Parameters
+    -------------
+    ext = str, file extension. ex) ".json" or ".txt"
+
+    fileName = str, path to file. Can include custom directory, uses processes/
+                by default.
+
+    Returns
+    -------------
+    typeName, fileName = str, file paths including the extension (typeName) and
+                         without (fileName).
+    """
+    if ext != fileName[-len(ext):].lower():
         typeName = ''.join([fileName, ext])
     else:
-        typeName = fileName
         fileName = fileName[0:-len(ext)]
+        typeName = ''.join([fileName, ext])
 
     return typeName, fileName
 
 
 def default_path(fileName):
     """
-    sub function for reading file paths, determining whether a path was
-    specified or just the file name (in default "processes" path)
+    Helper function for making sure the correct file path is added.
+
+    Parameters
+    -------------
+    fileName = str, path to file. Can include custom directory, uses processes/
+                by default.
+
+    Returns
+    -------------
+    fileName = str, file path including specific file location
     """
     noPath = '/' not in fileName and '\\' not in fileName
     if noPath:
@@ -573,6 +673,21 @@ def default_path(fileName):
 
 
 def get_avails(mod, mod_units, currentMods):
+    """
+    Helper function for determining which options the user can choose from.
+
+    Parameters
+    -------------
+    mod = str, name of Modular Unit
+
+    mod_units = list of str, names of Modular Units
+
+    currentMods = dictionary, Current Modular Units of bioprocess
+
+    Returns
+    -------------
+    avails = list of str, all available options for chosen Modular Unit "mod"
+    """
     avails = []
     dicts = call_json()
     if mod in mod_units[0:4]:
@@ -619,6 +734,19 @@ def get_avails(mod, mod_units, currentMods):
 
 
 def print_Details(mod, currentMods):
+    """
+    Helper function for writing detailed text from each Modular Unit.
+
+    Parameters
+    -------------
+    mod = str, name of Modular Unit
+
+    currentMods = dictionary, Current Modular Units of bioprocess
+
+    Returns
+    -------------
+    detailText = str, information from currentMods for the user's reference
+    """
     detailText = ''
     detailMod = currentMods[mod]
     for key, val in detailMod.items():
@@ -651,7 +779,10 @@ def print_Details(mod, currentMods):
 
 
 def create_default():
-
+    """
+    Function for recreating a startup bioprocess in case the current one is
+    deleted.
+    """
     flows, cm = user_build('ethanol')
     flows, cm = user_change('process', 'yeast_anaerobic', cm)
     flows, cm = user_change('proc1', 'ecoli_anaerobic', cm)
@@ -1124,7 +1255,6 @@ def append_results(a, results, result_column):
 
 def user_build(product, optimization=None, filter=None):
     """
-    ***NO LONGER RELEVANT***
     This function builds the "Bioprocess", which is the network of Modular
     Units and their values. The user only specifies the product, and then the
     rest of the values are ensured to be "compatible" and then chosen

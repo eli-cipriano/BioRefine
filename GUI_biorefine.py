@@ -7,9 +7,7 @@ import json
 This code can be run in a pysimple trinket.io
 See: https://pysimplegui.trinket.io/demo-programs#/demo-programs/the-basic-pysimplegui-program
 
-SAVING YOUR BIOPROCESS:
-When saving, your output file will be written as a json, whether you
-include a file extension or not.
+Or, install PySimpleGUI to run on your CPU.
 
 brf functions used:
  - user_change
@@ -48,9 +46,10 @@ def main_layout(modValues, mod_units, header=''):
         '---------------------------------------------------------------'
     spacer = '                                                                '\
         '                                                                     '
+    help_text = '  Help  '
 
     tab1_layout = [[sg.Text(spacer+'                         '),
-                    sg.Button('Help', key='bioprocess_help')],
+                    sg.Button(help_text, key='bioprocess_help')],
 
                    [sg.Button(modValues['side1'], key='side1'), sg.Text(' --> '),
                     sg.Button(modValues['sub1'], key='sub1'), sg.Text(' --> '),
@@ -85,13 +84,14 @@ def main_layout(modValues, mod_units, header=''):
                    [sg.Text('\n\n\n')],
 
                    [sg.Text(spacer),
+                    sg.Button(' UNDO ', key='undo'),
                     sg.Button('Load Preset', key='load'),
                     sg.Button('Save & Quit', key='exit')]
 
                    ]
 
     tab2_layout = [[sg.T(spacer+'                         '),
-                    sg.Button('Help', key='details_help')],
+                    sg.Button(help_text, key='details_help')],
 
                    [sg.Text('See details for:')],
 
@@ -105,13 +105,13 @@ def main_layout(modValues, mod_units, header=''):
     #          key='detailText')]]
 
     tab3_layout = [[sg.T(spacer+'                         '),
-                    sg.Button('Help', key='custom_help')],
+                    sg.Button(help_text, key='custom_help')],
 
                    [sg.Text('Select conversion type:')],
 
                    [sg.Combo(values=['material', 'side', 'substrate'],
-                             key='new_mod', size=(20, 1)),
-                    sg.Button('Launch', key='Detail Chosen')], ]
+                             key='customTypes', size=(20, 1)),
+                    sg.Button('Launch', key='customType Chosen')], ]
 
     layout = [[sg.TabGroup([[sg.Tab('Bioprocess', tab1_layout),
                              sg.Tab('Details', tab2_layout),
@@ -120,37 +120,37 @@ def main_layout(modValues, mod_units, header=''):
     return layout
 
 
-def data_addition_layout(entry_type):
+def callback_AddData(customType):
     """
-    Allow users to add their own data entries
+    Allow users to add their own data entries. Not functional yet.
     """
-
-    if entry_type == 'material':
+    print('custom')
+    if customType == 'material':
         sg.popup('material')
-    elif entry_type == 'side':
+    elif customType == 'side':
         sg.popup('side')
-    elif entry_type == 'substrate':
+    elif customTypee == 'substrate':
         sg.popup('substrate')
     return None
 
 
 def callback_UserChange(changingMod, avails, currentMods, window):
     """
-    This appears to add the values of the dropdown list.
+    This creates the values of the dropdown list.
 
     Parameters
     -------------
-    changingMod =
+    changingMod = str, Modular Unit being changed
 
-    avails =
+    avails = list of str, list of available options
 
-    currentMods =
+    currentMods = dictionary, current values of Modular Units
 
-    window=
+    window = GUI object
 
     Returns
     -------------
-
+    None
     """
 
     title = 'Change {}:'.format(changingMod)
@@ -165,18 +165,18 @@ def callback_UserChange(changingMod, avails, currentMods, window):
     window['changeOptions'].update(values=avails)
     window['changeOptions'].update(value='')
 
+    return None
 
-def callback_ApplyChange(window, newVal):
+
+def callback_ResetDropdown(window):
     """
-    Updates the window based on output from callback_UserChange
+    Updates the dropdown after newVal is selected and applied
 
     Parameters
     -------------
-    window =
+    window = GUI object
 
-    newVal =
-
-    Returns
+    Returns None
     -------------
     """
     # set values and value to empty to get rid of previously specified answers
@@ -184,7 +184,7 @@ def callback_ApplyChange(window, newVal):
     window['changeOptions'].update(values=[''])
     window['changeOptions'].update(value='')
 
-    return newVal
+    return None
 
 
 def callback_LoadMap(fileName=None):
@@ -217,15 +217,36 @@ def callback_LoadMap(fileName=None):
 
 
 def callback_UpdateMap(cm, mod_units, window):
+    """
+    Updates the biomap after newVal is selected and applied
+
+    Parameters
+    -------------
+    cm = dictionary, Current Modular Units of bioprocess
+
+    mod_units = list of str, list of Modular Unit names
+
+    window = GUI object
+
+    Returns None
+    -------------
+    """
     for mod in mod_units:
       # Boost is not implemented yet, just a potential way to link different
-      # bioprocesses together via sideFlows
+      # bioprocesses together via sideFlows.
+      # Ex) swtichgrass as a source of extra cellulose
+
         if mod[0:5] != 'boost':
             # Updates a mod of the window . . .
             window[mod].update(cm[mod]['name'])
 
+    return None
+
 
 def callback_Save():
+    """
+    Saves current biomap as a JSON and TXT file to be loaded or viewed later on.
+    """
     saving_msg = 'Save Bioprocess As:'\
         '\n(will save in processes/ by default)'
     fileName = sg.popup_get_text(saving_msg, 'File Saver')
@@ -239,23 +260,38 @@ def callback_Save():
         fileName = 'cancel'
     elif fileName == '':
         fileName = 'exit'
+
     return fileName
 
 
 def callback_Details(mod, currentMods, window):
     """
-    sub function for receiving input from user on which module they would like
-    to view detailed properties of.
+    Subfunction for receiving and parsing user events
+
+    Parameters
+    -------------
+    mod = str, Modular Unit name
+
+    currentMods = dictionary, Current Modular Units of bioprocess
+
+    window = GUI object
+
+    Returns
+    -------------
+    None
     """
     detailMod = currentMods[mod]
     detailText = brf.print_Details(mod, currentMods)
     sg.popup(detailText)
     # window['detailText'].update('Details for {}:\n{}'.format(mod, detailText))
 
+    return None
+
 
 def callback_PrintHelp(help_type):
     """
-    sub function for printing help documentation
+    sub function for printing help documentation. help_type is determined by
+    which tab is being viewed.
     """
     if help_type == 'bioprocess':
         help_msg = 'Click a button to set which Modular Unit you would like to'\
@@ -295,6 +331,7 @@ def main():
     # initialize the bioprocess with default values
     try:
         cm = callback_LoadMap(fileName='.startup_DO-NOT-DELETE')
+        previous_cm = callback_LoadMap(fileName='.startup_DO-NOT-DELETE')
 
         if cm is None:
             raise FileNotFoundError
@@ -329,19 +366,33 @@ def main():
         event, values = window.read()
         try:
             # check that conditions are met for input actions
+
             canApply = changingMod is not None and values['changeOptions'] != ''
             canDetail = values['detailOptions'] != ''
+            canCustomize = values['customTypes'] != ''
+
         except:
             pass
+
+        # print(event, canCustomize)
 
         if event == sg.WIN_CLOSED:
             break
 
         elif event == 'Apply Change' and canApply:
-            newVal = callback_ApplyChange(window, values['changeOptions'])
+            # store current bioprocess as previous cm
+            brf.write_bioprocess(cm, '.biorefine_data/previous_cm')
+
+            # update window and currentMods with new values
+            callback_ResetDropdown(window)
+            newVal = values['changeOptions']
             flows, cm = brf.user_change(changingMod, newVal, cm)
             callback_UpdateMap(cm, mod_units, window)
             changingMod = None
+
+        elif event == 'undo':
+            cm = callback_LoadMap(fileName='.biorefine_data/previous_cm')
+            callback_UpdateMap(cm, mod_units, window)
 
         elif event in mod_units:
             if cm[event]['name'] != '':
@@ -353,7 +404,14 @@ def main():
             mod = values['detailOptions']
             callback_Details(mod, cm, window)
 
+        elif event == 'customType Chosen' and canCustomize:
+            customType = values['customTypes']
+            callback_AddData(customType)
+
         elif event == 'load':
+            # save current process as previous_cm for undo feature
+            brf.write_bioprocess(cm, '.biorefine_data/previous_cm')
+
             new_cm = callback_LoadMap()
             if new_cm == 'cancel':
                 pass
