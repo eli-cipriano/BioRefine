@@ -792,7 +792,7 @@ def build_processes():
 
     # extract information for each process
     for proc in processList:
-        results = get_column('.biorefine_data/.biorefine_data/data_sub2prod.csv',
+        results = get_column('.biorefine_data/data_sub2prod.csv',
                              result_column=[2, 3],
                              query_column=0,
                              query_value=proc)

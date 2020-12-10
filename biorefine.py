@@ -1,5 +1,5 @@
 """
-This is the main UI file for running/using BioRefine, bioreflib.
+This is the OUTDATED minimal UI file for running/using BioRefine, bioreflib.
 It allows the user to view and change the Modular Units of the bioprocess, which are
 the discrete units of the bioprocess. For instance, the Module 'material' might
 have the value, 'corn', or the Module 'process' might have the value
@@ -358,4 +358,10 @@ def print_help():
 
 
 if __name__ == '__main__':
+    os.system('clear')
+    print('THIS PROGRAM IS OUTDATED.\nUse GUI_biorefine for the most updated'
+          + 'software.\nPress ENTER to continue...')
+
+    input()
+    os.system('clear')
     main()
