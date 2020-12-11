@@ -46,7 +46,7 @@ Click which Modular Unit you want to see more detailed information about. This i
 
 **tab3: Custom**
 
-Click which data type you would like to add to.
+Click which data type you would like to add to. (NOT YET FUNCTIONAL)
 
 - Materials refer to information on converting raw biomass into substrate compounds.
 - Sides refer to information on converting by-products of materials into useful substrates as well.
