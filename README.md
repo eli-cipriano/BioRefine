@@ -26,4 +26,29 @@ Considering these terms, which we refer to as "Modular Units" of the bioprocess,
 
 ## How to Run:
 
-Make sure all dependencies are installed, which should only be PySimpleGUI. Then just run GUI_biorefine.py from the command line, and you should be good to go. our biorefine.py program was a command-line beta that helped us flesh out our idea. We left it as another option, but it does not have as many features as the GUI and has not been fully debugged. 
+Make sure all dependencies are installed, which should only be PySimpleGUI. Then just run GUI_biorefine.py from the command line, and you should be good to go. our biorefine.py program was a command-line beta that helped us flesh out our idea. We left it as another option, but it does not have as many features as the GUI and has not been fully debugged.
+
+**tab1: Bioprocess**
+
+Once you are in the GUI window, click a button to set which Modular Unit you would like to change. Then select an option from the drop-down menu. Options will only be available if they are compatible with neighboring Modular Units. You can only change one Modular Unit at a time.
+
+Use the "Load" button to change the current map to a previously saved Bioprocess. Use the "Save & Quit" button to save your current map.
+
+- Files will automatically be saved/loaded to/from the processes/ directory, unless otherwise stated in the file path name.
+- The file will save and load JSON files automatically, so do not your own file extension.
+
+When quitting, press OK with no file name to exit without saving. You can also close the window at any point to exit without saving.
+
+**tab2: Details**
+
+Click which Modular Unit you want to see more detailed information about. This information will also be written to a text file upon saving.
+
+
+**tab3: Custom**
+
+Click which data type you would like to add to.
+
+- Materials refer to information on converting raw biomass into substrate compounds.
+- Sides refer to information on converting by-products of materials into useful substrates as well.
+- Substrates refer to information on converting basic compounds into more valuable and refined products.
+
